@@ -1,0 +1,52 @@
+# Miscellaneous from existing file
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# Flutter/Dart/Pub related
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+build/
+app.*.symbols
+app.*.map.json
+
+# IDE-specific files
+*.iml
+*.ipr
+*.iws
+.idea/
+
+
+
+.env
+
+# Platform-specific files
+# Android
+android/local.properties
+android/.gradle/
+/android/app/debug/
+/android/app/profile/
+/android/app/release/
+
+# iOS/macOS
+ios/Pods/
+ios/Runner.xcworkspace/
+ios/.symlinks/
+ios/Flutter/ephemeral/
+macos/Flutter/ephemeral/
+*.xcworkspace
+/ios/Flutter/.last_build_id
+
+# Windows/Linux
+windows/flutter/ephemeral/
+linux/flutter/ephemeral/
