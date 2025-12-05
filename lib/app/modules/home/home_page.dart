@@ -2,396 +2,285 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'home_controller.dart';
 
-
-class HomePage extends StatelessWidget {
+class HomePage extends GetView<DebtController> {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final controller = Get.put(DebtController());
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Jaga Warung - Catat Hutang'),
-        backgroundColor: const Color(0xFF6C5CE7),
-        foregroundColor: Colors.white,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: () => controller.loadDebts(),
-          ),
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () {
-              Get.defaultDialog(
-                title: 'Logout',
-                middleText: 'Apakah Anda yakin ingin keluar?',
-                textConfirm: 'Ya',
-                textCancel: 'Tidak',
-                confirmTextColor: Colors.white,
-                onConfirm: () {
-                  Get.back();
-                  Get.offAllNamed('/login');
-                },
-              );
+      appBar: _buildAppBar(context),
+      body: Obx(
+        () => controller.debts.isEmpty
+            ? const _EmptyState()
+            : _DebtList(),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      floatingActionButton: _buildVoiceCommandButton(context),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
+    return AppBar(
+      title: const Text('Jaga Warung'),
+      // AppBar styling is now from AppTheme
+      actions: [
+        IconButton(
+          icon: const Icon(Icons.document_scanner_outlined),
+          onPressed: () => Get.toNamed('/smart-restock'),
+          tooltip: 'Smart Restock (Scan Nota)',
+        ),
+        IconButton(
+          icon: const Icon(Icons.refresh),
+          tooltip: 'Muat Ulang Data',
+          onPressed: () => controller.loadDebts(),
+        ),
+        _buildLogoutMenu(context),
+      ],
+    );
+  }
+
+  Widget _buildLogoutMenu(BuildContext context) {
+    return PopupMenuButton<String>(
+      tooltip: 'Opsi Lainnya',
+      onSelected: (value) {
+        if (value == 'logout') {
+          Get.defaultDialog(
+            title: 'Logout',
+            middleText: 'Apakah Anda yakin ingin keluar?',
+            textConfirm: 'Ya, Keluar',
+            textCancel: 'Batal',
+            confirmTextColor: Colors.white,
+            onConfirm: () {
+              Get.back(); // Close dialog
+              Get.offAllNamed('/login');
             },
+          );
+        }
+      },
+      itemBuilder: (context) => const [
+        PopupMenuItem(
+          value: 'logout',
+          child: Row(
+            children: [
+              Icon(Icons.logout, size: 20),
+              SizedBox(width: 12),
+              Text('Logout'),
+            ],
           ),
-        ],
-      ),
-      body: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                colors: [
-                  const Color(0xFF6C5CE7),
-                  const Color(0xFF6C5CE7).withOpacity(0.8),
-                ],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildVoiceCommandButton(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Obx(() {
+      final isListening = controller.isListening.value;
+      final isProcessing = controller.isProcessing.value;
+
+      String label = 'Ketuk untuk Bicara';
+      IconData icon = Icons.mic_none;
+      Color buttonColor = colorScheme.primary;
+      if (isProcessing) {
+        label = 'Memproses...';
+        icon = Icons.sync;
+        buttonColor = colorScheme.secondary;
+      } else if (isListening) {
+        label = 'Mendengarkan...';
+        icon = Icons.mic;
+        buttonColor = Colors.red;
+      }
+
+      // Using Semantics for accessibility
+      return Semantics(
+        label: 'Tombol Perintah Suara. Status saat ini: $label',
+        button: true,
+        child: FloatingActionButton.extended(
+          onPressed: isProcessing ? null : () {
+            if (isListening) {
+              controller.stopListening();
+            } else {
+              controller.startListening();
+            }
+          },
+          backgroundColor: buttonColor,
+          icon: isProcessing
+              ? SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2,
+                    color: colorScheme.onPrimary,
+                  ),
+                )
+              : Icon(icon, color: colorScheme.onPrimary),
+          label: Text(label, style: TextStyle(color: colorScheme.onPrimary)),
+          // Ensure large enough tap target by default
+        ),
+      );
+    });
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState();
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+    final controller = Get.find<DebtController>();
+
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.receipt_long_outlined,
+              size: 80,
+              color: colorScheme.onBackground.withOpacity(0.4),
+            ),
+            const SizedBox(height: 24),
+            Text(
+              'Belum Ada Utang',
+              style: textTheme.headlineLarge?.copyWith(
+                color: colorScheme.onBackground,
               ),
+              textAlign: TextAlign.center,
             ),
-            child: Column(
-              children: [
-                const Text(
-                  '🎤 Voice Command',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'Tekan tombol dan ucapkan:\n"Catat hutang Budi 2000"\n"Berapa hutang Budi?"',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    color: Colors.white70,
-                    fontSize: 14,
-                  ),
-                ),
-                const SizedBox(height: 24),
-
-               
-                Obx(
-                  () => Column(
-                    children: [
-                      GestureDetector(
-                        onTap: () {
-                          if (controller.isListening.value) {
-                            controller.stopListening();
-                          } else {
-                            controller.startListening();
-                          }
-                        },
-                        child: Container(
-                          width: 80,
-                          height: 80,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: controller.isListening.value
-                                ? Colors.red
-                                : Colors.white,
-                            boxShadow: controller.isListening.value
-                                ? [
-                                    BoxShadow(
-                                      color: Colors.red.withOpacity(0.5),
-                                      blurRadius: 20,
-                                      spreadRadius: 5,
-                                    ),
-                                  ]
-                                : [],
-                          ),
-                          child: Icon(
-                            controller.isListening.value
-                                ? Icons.mic
-                                : Icons.mic_none,
-                            size: 40,
-                            color: controller.isListening.value
-                                ? Colors.white
-                                : const Color(0xFF6C5CE7),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        controller.isListening.value
-                            ? 'Mendengarkan...'
-                            : 'Tap untuk mulai bicara',
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-              
-                const SizedBox(height: 16),
-                Obx(
-                  () => Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (controller.recognizedText.value.isNotEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.15),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Teks yang didengar:',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                controller.recognizedText.value,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      if (controller.lastResponseText.value.isNotEmpty) ...[
-                        const SizedBox(height: 12),
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.2),
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text(
-                                'Respon sistem:',
-                                style: TextStyle(
-                                  color: Colors.white70,
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                controller.lastResponseText.value,
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 15,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-
-       
-                Obx(() => controller.isProcessing.value
-                    ? const Padding(
-                        padding: EdgeInsets.only(top: 16),
-                        child: CircularProgressIndicator(
-                          color: Colors.white,
-                        ),
-                      )
-                    : const SizedBox.shrink()),
-
-     
-                Obx(() => controller.errorMessage.value.isNotEmpty
-                    ? Container(
-                        margin: const EdgeInsets.only(top: 16),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          color: Colors.red.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.red),
-                        ),
-                        child: Text(
-                          controller.errorMessage.value,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 12,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      )
-                    : const SizedBox.shrink()),
-              ],
+            const SizedBox(height: 8),
+            Text(
+              'Gunakan perintah suara untuk mencatat utang baru.',
+              style: textTheme.bodyLarge?.copyWith(
+                color: colorScheme.onBackground.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
             ),
-          ),
-
-       
-          Expanded(
-            child: Obx(() {
-              if (controller.debts.isEmpty) {
-                return const Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Icon(
-                        Icons.account_balance_wallet_outlined,
-                        size: 80,
-                        color: Colors.grey,
-                      ),
-                      SizedBox(height: 16),
-                      Text(
-                        'Belum ada hutang tercatat',
-                        style: TextStyle(
-                          fontSize: 18,
-                          color: Colors.grey,
-                        ),
-                      ),
-                      SizedBox(height: 8),
-                      Text(
-                        'Gunakan voice command untuk mencatat',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey,
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-
-              final Map<String, List<dynamic>> groupedDebts = {};
-              for (var debt in controller.debts) {
-                if (!groupedDebts.containsKey(debt.customerName)) {
-                  groupedDebts[debt.customerName] = [];
-                }
-                groupedDebts[debt.customerName]!.add(debt);
-              }
-
-              return ListView.builder(
-                padding: const EdgeInsets.all(16),
-                itemCount: groupedDebts.length,
-                itemBuilder: (context, index) {
-                  final customerName = groupedDebts.keys.elementAt(index);
-                  final customerDebts = groupedDebts[customerName]!;
-                  final totalDebt = customerDebts.fold<double>(
-                    0.0,
-                    (sum, debt) => sum + debt.amount,
-                  );
-
-                  return Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ExpansionTile(
-                      leading: CircleAvatar(
-                        backgroundColor: const Color(0xFF6C5CE7),
-                        child: Text(
-                          customerName[0].toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
-                      title: Text(
-                        customerName,
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                      ),
-                      subtitle: Text(
-                        'Total: ${controller.formatCurrency(totalDebt)}',
-                        style: const TextStyle(
-                          color: Color(0xFF6C5CE7),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      children: customerDebts.map<Widget>((debt) {
-                        return ListTile(
-                          dense: true,
-                          leading: const Icon(
-                            Icons.receipt_long,
-                            size: 20,
-                            color: Colors.grey,
-                          ),
-                          title: Text(
-                            controller.formatCurrency(debt.amount),
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                          subtitle: Text(
-                            controller.formatDate(debt.createdAt),
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          trailing: IconButton(
-                            icon: const Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: Colors.red,
-                            ),
-                            onPressed: () {
-                              Get.defaultDialog(
-                                title: 'Hapus Hutang',
-                                middleText: 'Hapus hutang ini?',
-                                textConfirm: 'Ya',
-                                textCancel: 'Tidak',
-                                confirmTextColor: Colors.white,
-                                onConfirm: () async {
-                                  await controller.debtService
-                                      .deleteDebt(debt.id!);
-                                  await controller.loadDebts();
-                                  Get.back();
-                                  Get.snackbar(
-                                    '✅ Berhasil',
-                                    'Hutang berhasil dihapus',
-                                  );
-                                },
-                              );
-                            },
-                          ),
-                        );
-                      }).toList(),
-                    ),
-                  );
-                },
-              );
-            }),
-          ),
-        ],
+            const SizedBox(height: 40),
+            // The main FAB serves as the primary CTA, no need for another button here.
+          ],
+        ),
       ),
-      floatingActionButton: Obx(() {
-        if (controller.debts.isEmpty) return const SizedBox.shrink();
+    );
+  }
+}
 
-        final totalAllDebts = controller.debts.fold<double>(
+class _DebtList extends GetView<DebtController> {
+  @override
+  Widget build(BuildContext context) {
+    // Group debts by customer name
+    final Map<String, List<dynamic>> groupedDebts = {};
+    for (var debt in controller.debts) {
+      if (!groupedDebts.containsKey(debt.customerName)) {
+        groupedDebts[debt.customerName] = [];
+      }
+      groupedDebts[debt.customerName]!.add(debt);
+    }
+    final customerNames = groupedDebts.keys.toList();
+
+    return ListView.builder(
+      padding: const EdgeInsets.fromLTRB(16, 16, 16, 96), // Padding for FAB
+      itemCount: customerNames.length,
+      itemBuilder: (context, index) {
+        final customerName = customerNames[index];
+        final customerDebts = groupedDebts[customerName]!;
+        final totalDebt = customerDebts.fold<double>(
           0.0,
           (sum, debt) => sum + debt.amount,
         );
 
-        return FloatingActionButton.extended(
-          onPressed: () {
-            Get.defaultDialog(
-              title: '📊 Total Semua Hutang',
-              middleText: controller.formatCurrency(totalAllDebts),
-              textConfirm: 'OK',
-              onConfirm: () => Get.back(),
-            );
-          },
-          backgroundColor: const Color(0xFF6C5CE7),
-          icon: const Icon(Icons.analytics),
-          label: Text(controller.formatCurrency(totalAllDebts)),
+        return _CustomerDebtCard(
+          customerName: customerName,
+          totalDebt: totalDebt,
+          debts: List<dynamic>.from(customerDebts),
         );
-      }),
+      },
+    );
+  }
+}
+
+class _CustomerDebtCard extends GetView<DebtController> {
+  final String customerName;
+  final double totalDebt;
+  final List<dynamic> debts;
+
+  const _CustomerDebtCard({
+    required this.customerName,
+    required this.totalDebt,
+    required this.debts,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return Card(
+      // Card styling from AppTheme
+      margin: const EdgeInsets.only(bottom: 16),
+      child: ExpansionTile(
+        leading: CircleAvatar(
+          backgroundColor: colorScheme.primary.withOpacity(0.1),
+          foregroundColor: colorScheme.primary,
+          child: Text(
+            customerName.isNotEmpty ? customerName[0].toUpperCase() : '?',
+            style: const TextStyle(fontWeight: FontWeight.bold),
+          ),
+        ),
+        title: Text(customerName, style: theme.textTheme.titleLarge?.copyWith(color: colorScheme.onSurface)),
+        subtitle: Text(
+          'Total: ${controller.formatCurrency(totalDebt)}',
+          style: theme.textTheme.bodyMedium?.copyWith(color: colorScheme.primary, fontWeight: FontWeight.bold),
+        ),
+        children: debts.map((debt) => _buildDebtTile(context, debt)).toList(),
+      ),
+    );
+  }
+
+  Widget _buildDebtTile(BuildContext context, dynamic debt) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
+    return ListTile(
+      dense: true,
+      leading: const SizedBox(width: 24, child: Icon(Icons.shopping_bag_outlined, size: 20)),
+      title: Text(controller.formatCurrency(debt.amount)),
+      subtitle: Text(controller.formatDate(debt.createdAt)),
+      trailing: IconButton(
+        icon: Icon(Icons.delete_outline, color: colorScheme.error),
+        tooltip: 'Hapus utang ini',
+        // Increase tap target size for accessibility
+        padding: const EdgeInsets.all(12.0),
+        onPressed: () {
+          Get.defaultDialog(
+            title: 'Hapus Utang',
+            middleText: 'Anda yakin ingin menghapus utang ${controller.formatCurrency(debt.amount)} untuk ${debt.customerName}?',
+            textConfirm: 'Ya, Hapus',
+            textCancel: 'Batal',
+            confirmTextColor: Colors.white,
+            onConfirm: () async {
+              Get.back(); // Close dialog
+              await controller.debtService.deleteDebt(debt.id!);
+              await controller.loadDebts();
+              Get.snackbar(
+                'Berhasil',
+                'Utang berhasil dihapus.',
+                snackPosition: SnackPosition.BOTTOM,
+                backgroundColor: Colors.green,
+                colorText: Colors.white,
+              );
+            },
+          );
+        },
+      ),
     );
   }
 }

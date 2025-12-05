@@ -1,7 +1,6 @@
 import 'package:google_generative_ai/google_generative_ai.dart';
 import '../../../env.dart';
 
-
 class AiParsingService {
   late final GenerativeModel _model;
 
@@ -11,7 +10,6 @@ class AiParsingService {
       apiKey: Environment.geminiApiKey,
     );
   }
-
 
   Future<Map<String, dynamic>> parseVoiceCommand(String voiceText) async {
     try {
@@ -68,10 +66,8 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
       final response = await _model.generateContent(content);
       final responseText = response.text?.trim() ?? '';
 
-   
       String jsonText =
           responseText.replaceAll('```json', '').replaceAll('```', '').trim();
-
 
       final result = _parseJsonResponse(jsonText);
       return result;
@@ -82,12 +78,10 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
     }
   }
 
-
   Map<String, dynamic> _parseJsonResponse(String jsonText) {
     try {
       final json = jsonText.replaceAll('\n', '').replaceAll('  ', '');
 
-    
       final actionMatch = RegExp(r'"action":\s*"([^"]+)"').firstMatch(json);
       final nameMatch = RegExp(r'"name":\s*"([^"]+)"').firstMatch(json);
       final amountMatch = RegExp(r'"amount":\s*(\d+|null)').firstMatch(json);
@@ -109,14 +103,12 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
     }
   }
 
-
   Map<String, dynamic> _fallbackParsing(String text) {
     final lowerText = text.toLowerCase();
 
     String action = 'unknown';
     String name = '';
     double? amount;
-
 
     if (lowerText.contains(RegExp(r'cat[ae]t?\s+(hutang|utang)'))) {
       action = 'catat_hutang';
@@ -126,7 +118,6 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
       action = 'hapus_hutang';
     }
 
-  
     if (action == 'catat_hutang') {
       final match = RegExp(
         r'cat[ae]t?\s+(?:hutang|utang)\s+([a-zA-Z\s]+?)\s+(.+)',
@@ -157,14 +148,11 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
     };
   }
 
- 
   double _parseIndonesianNumber(String text) {
     final lower = text.toLowerCase().trim();
 
- 
     final directNumber = double.tryParse(lower);
     if (directNumber != null) return directNumber;
-
 
     final Map<String, int> numbers = {
       'nol': 0,
@@ -195,7 +183,6 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
     for (final word in words) {
       if (word.isEmpty) continue;
 
-   
       if (word.startsWith('se')) {
         final base = word.substring(2);
         if (numbers.containsKey(base)) {
@@ -213,24 +200,19 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
         final value = numbers[word]!;
 
         if (value >= 1000000) {
-       
           result += (current == 0 ? 1 : current) * value;
           current = 0;
         } else if (value >= 1000) {
- 
           if (current == 0) current = 1;
           result += current * value;
           current = 0;
         } else if (value >= 100) {
-      
           if (current == 0) current = 1;
           current *= value;
         } else if (value >= 10 && word == 'puluh') {
-      
           if (current == 0) current = 1;
           current *= value;
         } else if (word == 'belas') {
-    
           current += 10;
         } else {
           if (current == 0) {
@@ -245,7 +227,6 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
     result += current;
     return result > 0 ? result : 0;
   }
-
 
   String _capitalizeWords(String text) {
     return text.split(' ').map((word) {

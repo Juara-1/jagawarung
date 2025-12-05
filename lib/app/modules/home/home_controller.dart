@@ -213,6 +213,7 @@ class DebtController extends GetxController {
       }
     } catch (e) {
       errorMessage.value = 'Gagal mencatat hutang: $e';
+      print(" error ${e}");
       await _speak('Gagal mencatat hutang');
       Get.snackbar('Error', errorMessage.value);
     }
@@ -354,6 +355,7 @@ class DebtController extends GetxController {
       );
     } catch (e) {
       errorMessage.value = 'Gagal mencatat hutang: $e';
+      print("error ${e}");
       await _speak('Gagal mencatat hutang');
       Get.snackbar('Error', errorMessage.value);
     }
@@ -452,6 +454,13 @@ class DebtController extends GetxController {
 
   Future<void> _speak(String text) async {
     await _flutterTts.speak(text);
+  }
+
+  /// Replay last system response via TTS
+  Future<void> replayLastResponse() async {
+    if (lastResponseText.value.isNotEmpty) {
+      await _speak(lastResponseText.value);
+    }
   }
 
 

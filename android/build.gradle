@@ -10,9 +10,9 @@ rootProject.buildDir = "../build"
 // Define flutter properties for plugins that need them (used by some plugins like app_links)
 ext {
     flutter = [
-        compileSdkVersion: 34,
+        compileSdkVersion: 35,
         minSdkVersion: 21,
-        targetSdkVersion: 34
+        targetSdkVersion: 35
     ]
 }
 
@@ -24,7 +24,7 @@ subprojects {
             android {
                 // Set compileSdkVersion untuk semua modules jika belum diset
                 if (!android.compileSdkVersion) {
-                    compileSdkVersion 34
+                    compileSdkVersion 35
                 }
                 
                 if (namespace == null) {
