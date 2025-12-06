@@ -1,11 +1,19 @@
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 
 class Environment {
-  static String get supabaseUrl => dotenv.env['SUPABASE_URL'] ?? '';
-  static String get supabaseAnonKey => dotenv.env['SUPABASE_ANON_KEY'] ?? '';
-  static String get geminiApiKey => dotenv.env['GEMINI_API_KEY'] ?? '';
-  static String get kolosalApiKey => dotenv.env['KOLOSAL_API_KEY'] ?? '';
-  static String get apiBaseUrl => dotenv.env['API_BASE_URL'] ?? '';
+  static String _get(String key) {
+    try {
+      return dotenv.maybeGet(key, fallback: '') ?? '';
+    } catch (_) {
+      return '';
+    }
+  }
+
+  static String get supabaseUrl => _get('SUPABASE_URL');
+  static String get supabaseAnonKey => _get('SUPABASE_ANON_KEY');
+  static String get geminiApiKey => _get('GEMINI_API_KEY');
+  static String get kolosalApiKey => _get('KOLOSAL_API_KEY');
+  static String get apiBaseUrl => _get('API_BASE_URL');
 
   static bool validate() {
     if (supabaseUrl.isEmpty) {
