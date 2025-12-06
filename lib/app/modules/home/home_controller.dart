@@ -1,15 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
+import 'package:jagawarung/app/data/models/transaction_model.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:permission_handler/permission_handler.dart';
 import '../../data/services/debt_service.dart';
 import '../../data/services/ai_parsing_service.dart';
-import '../../data/models/debt_model.dart';
+import '../../data/repositories/auth_repository.dart';
+import '../../routes/app_routes.dart';
 
 class DebtController extends GetxController {
   final DebtService _debtService = DebtService();
   final AiParsingService _aiService = AiParsingService();
+  final AuthRepository _authRepository = AuthRepository();
   final stt.SpeechToText _speech = stt.SpeechToText();
   final FlutterTts _flutterTts = FlutterTts();
 
@@ -18,9 +21,10 @@ class DebtController extends GetxController {
   final recognizedText = ''.obs;
   final isProcessing = false.obs;
   final lastResponseText = ''.obs;
-  final debts = <DebtModel>[].obs;
+  final debts = <TransactionModel>[].obs;
   final errorMessage = ''.obs;
   final isSpeechAvailable = false.obs;
+  final List<String> _preferredTtsLangs = const ['jv-ID'];
 
   @override
   void onInit() {
@@ -57,10 +61,24 @@ class DebtController extends GetxController {
 
 
   Future<void> _initializeTts() async {
-    await _flutterTts.setLanguage('id-ID');
+    await _setPreferredLanguage();
     await _flutterTts.setSpeechRate(0.5);
     await _flutterTts.setVolume(1.0);
     await _flutterTts.setPitch(1.0);
+  }
+
+  Future<void> _setPreferredLanguage() async {
+    try {
+      final langs = (await _flutterTts.getLanguages)?.cast<String>() ?? [];
+      for (final code in _preferredTtsLangs) {
+        if (langs.contains(code)) {
+          await _flutterTts.setLanguage(code);
+          return;
+        }
+      }
+    } catch (_) {
+      // ignore errors, keep default
+    }
   }
 
 
@@ -97,11 +115,11 @@ class DebtController extends GetxController {
 
 
   Future<void> processVoiceCommand(String command) async {
+    isListening.value = false;
     isProcessing.value = true;
     errorMessage.value = '';
 
     try {
-      
       lastResponseText.value = '🤖 Memproses dengan AI...';
       final parsed = await _aiService.parseVoiceCommand(command);
 
@@ -162,55 +180,19 @@ class DebtController extends GetxController {
 
   Future<void> _handleAddDebt(String command) async {
     try {
+    
+      final result = await _debtService.addDebtViaAgent(command);
 
-      final regex = RegExp(
-      
-        r'catat\s+(?:hutang|utang)\s+([a-zA-Z0-9\s]+?)\s+([\d\.kK]+)',
-        caseSensitive: false,
+      final response = result.message;
+      lastResponseText.value = response;
+      await _speak(response);
+      await loadDebts();
+
+      Get.snackbar(
+        '✅ Berhasil',
+        response,
+        snackPosition: SnackPosition.BOTTOM,
       );
-
-      final match = regex.firstMatch(command);
-
-      if (match != null) {
-        final name = match.group(1)!.trim();
-        final rawAmount = match.group(2)!.trim();
-
-      
-        double parseAmount(String value) {
-          var v = value.replaceAll('.', '').toLowerCase();
-          if (v.endsWith('k')) {
-            v = v.substring(0, v.length - 1);
-            final base = double.parse(v);
-            return base * 1000;
-          }
-          return double.parse(v);
-        }
-
-        final amount = parseAmount(rawAmount);
-
-  
-        final debt = DebtModel(
-          customerName: name,
-          amount: amount,
-          createdAt: DateTime.now(),
-        );
-
-        await _debtService.addDebt(debt);
-        await loadDebts();
-
-        final response =
-            'Hutang $name sebesar ${formatCurrency(amount)} berhasil dicatat';
-        lastResponseText.value = response;
-        await _speak(response);
-        Get.snackbar(
-          '✅ Berhasil',
-          response,
-          snackPosition: SnackPosition.BOTTOM,
-        );
-      } else {
-        throw Exception(
-            'Format perintah salah. Contoh: "Catat hutang Budi 2000"');
-      }
     } catch (e) {
       errorMessage.value = 'Gagal mencatat hutang: $e';
       print(" error ${e}");
@@ -334,19 +316,14 @@ class DebtController extends GetxController {
 
   Future<void> _handleAddDebtAI(String name, double amount) async {
     try {
-      final debt = DebtModel(
-        customerName: name,
-        amount: amount,
-        createdAt: DateTime.now(),
-      );
 
-      await _debtService.addDebt(debt);
-      await loadDebts();
+      final prompt = '$name ${amount.toStringAsFixed(0)}';
+      final result = await _debtService.addDebtViaAgent(prompt);
 
-      final response =
-          'Hutang $name sebesar ${formatCurrency(amount)} berhasil dicatat';
+      final response = result.message;
       lastResponseText.value = response;
       await _speak(response);
+      await loadDebts();
       Get.snackbar(
         '✅ Berhasil',
         response,
@@ -486,6 +463,75 @@ class DebtController extends GetxController {
 
 
   DebtService get debtService => _debtService;
+
+
+  Future<void> repayDebt(String debtId) async {
+    try {
+      isProcessing.value = true;
+
+    
+      await _debtService.repayDebt(debtId);
+
+      await loadDebts();
+
+      await _speak('Pembayaran utang berhasil dicatat');
+
+      Get.snackbar(
+        '✅ Lunas!',
+        'Utang berhasil dilunasi dan tercatat sebagai pemasukan',
+        backgroundColor: Colors.green[400],
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+        duration: const Duration(seconds: 3),
+      );
+    } catch (e) {
+      errorMessage.value = 'Gagal melunasi utang: $e';
+      await _speak('Gagal melunasi utang');
+      Get.snackbar(
+        '❌ Gagal',
+        errorMessage.value,
+        backgroundColor: Colors.red[400],
+        colorText: Colors.white,
+        snackPosition: SnackPosition.BOTTOM,
+      );
+    } finally {
+      isProcessing.value = false;
+    }
+  }
+
+  Future<void> logout() async {
+    try {
+      final result = await _authRepository.signOut();
+      
+      if (result.isSuccess) {
+        Get.snackbar(
+          'Berhasil',
+          'Logout berhasil',
+          backgroundColor: Colors.green[400],
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+
+        Get.offAllNamed(AppRoutes.login);
+      } else {
+        Get.snackbar(
+          'Error',
+          result.errorMessage ?? 'Gagal logout',
+          backgroundColor: Colors.red[400],
+          colorText: Colors.white,
+          snackPosition: SnackPosition.TOP,
+        );
+      }
+    } catch (e) {
+      Get.snackbar(
+        'Error',
+        'Terjadi kesalahan: $e',
+        backgroundColor: Colors.red[400],
+        colorText: Colors.white,
+        snackPosition: SnackPosition.TOP,
+      );
+    }
+  }
 
   @override
   void onClose() {

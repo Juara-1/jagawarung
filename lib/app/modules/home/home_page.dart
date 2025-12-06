@@ -11,40 +11,80 @@ class HomePage extends GetView<DebtController> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      appBar: _buildAppBar(context),
-      body: Obx(
-        () => controller.debts.isEmpty
-            ? const _EmptyState()
-            : _DebtList(),
+      body: SafeArea(
+        child: Column(
+          children: [
+            _buildHeader(context),
+            Expanded(
+              child: Obx(
+                () => controller.debts.isEmpty
+                    ? const _EmptyState()
+                    : _DebtList(),
+              ),
+            ),
+          ],
+        ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       floatingActionButton: _buildVoiceCommandButton(context),
     );
   }
 
-  AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text('Jaga Warung'),
-      // AppBar styling is now from AppTheme
-      actions: [
-        IconButton(
-          icon: const Icon(Icons.document_scanner_outlined),
-          onPressed: () => Get.toNamed('/smart-restock'),
-          tooltip: 'Smart Restock (Scan Nota)',
-        ),
-        IconButton(
-          icon: const Icon(Icons.refresh),
-          tooltip: 'Muat Ulang Data',
-          onPressed: () => controller.loadDebts(),
-        ),
-        _buildLogoutMenu(context),
-      ],
+  Widget _buildHeader(BuildContext context) {
+    final theme = Theme.of(context);
+
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Manajemen Utang',
+                  style: theme.textTheme.headlineMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Catat dan kelola utang pelanggan',
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    color: theme.colorScheme.onBackground.withOpacity(0.7),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.document_scanner_outlined, size: 28),
+                onPressed: () => Get.toNamed('/smart-restock'),
+                tooltip: 'Smart Restock (Scan Nota)',
+                padding: const EdgeInsets.all(12),
+              ),
+              IconButton(
+                icon: const Icon(Icons.refresh, size: 28),
+                tooltip: 'Muat Ulang Data',
+                onPressed: () => controller.loadDebts(),
+                padding: const EdgeInsets.all(12),
+              ),
+              _buildLogoutMenu(context),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildLogoutMenu(BuildContext context) {
     return PopupMenuButton<String>(
       tooltip: 'Opsi Lainnya',
+      padding: const EdgeInsets.all(12),
+      icon: const Icon(Icons.more_vert, size: 28),
       onSelected: (value) {
         if (value == 'logout') {
           Get.defaultDialog(
@@ -54,7 +94,7 @@ class HomePage extends GetView<DebtController> {
             textCancel: 'Batal',
             confirmTextColor: Colors.white,
             onConfirm: () {
-              Get.back(); // Close dialog
+              Get.back();
               Get.offAllNamed('/login');
             },
           );
@@ -180,7 +220,7 @@ class _DebtList extends GetView<DebtController> {
     final Map<String, List<dynamic>> groupedDebts = {};
     for (var debt in controller.debts) {
       if (!groupedDebts.containsKey(debt.customerName)) {
-        groupedDebts[debt.customerName] = [];
+        groupedDebts[debt.customerName ?? ''] = [];
       }
       groupedDebts[debt.customerName]!.add(debt);
     }
@@ -254,32 +294,56 @@ class _CustomerDebtCard extends GetView<DebtController> {
       leading: const SizedBox(width: 24, child: Icon(Icons.shopping_bag_outlined, size: 20)),
       title: Text(controller.formatCurrency(debt.amount)),
       subtitle: Text(controller.formatDate(debt.createdAt)),
-      trailing: IconButton(
-        icon: Icon(Icons.delete_outline, color: colorScheme.error),
-        tooltip: 'Hapus utang ini',
-        // Increase tap target size for accessibility
-        padding: const EdgeInsets.all(12.0),
-        onPressed: () {
-          Get.defaultDialog(
-            title: 'Hapus Utang',
-            middleText: 'Anda yakin ingin menghapus utang ${controller.formatCurrency(debt.amount)} untuk ${debt.customerName}?',
-            textConfirm: 'Ya, Hapus',
-            textCancel: 'Batal',
-            confirmTextColor: Colors.white,
-            onConfirm: () async {
-              Get.back(); // Close dialog
-              await controller.debtService.deleteDebt(debt.id!);
-              await controller.loadDebts();
-              Get.snackbar(
-                'Berhasil',
-                'Utang berhasil dihapus.',
-                snackPosition: SnackPosition.BOTTOM,
-                backgroundColor: Colors.green,
-                colorText: Colors.white,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          IconButton(
+            icon: Icon(Icons.check_circle_outline, color: Colors.green),
+            tooltip: 'Tandai Lunas',
+            padding: const EdgeInsets.all(12.0),
+            onPressed: () {
+              Get.defaultDialog(
+                title: 'Pelunasan Utang',
+                middleText: 'Tandai utang ${controller.formatCurrency(debt.amount)} untuk ${debt.customerName} sebagai LUNAS?\n\nUtang akan berubah menjadi pemasukan.',
+                textConfirm: 'Ya, Lunas',
+                textCancel: 'Batal',
+                confirmTextColor: Colors.white,
+                buttonColor: Colors.green,
+                onConfirm: () async {
+                  Get.back(); // Close dialog
+                  await controller.repayDebt(debt.id!);
+                },
               );
             },
-          );
-        },
+          ),
+          // Button Delete
+          IconButton(
+            icon: Icon(Icons.delete_outline, color: colorScheme.error),
+            tooltip: 'Hapus utang ini',
+            padding: const EdgeInsets.all(12.0),
+            onPressed: () {
+              Get.defaultDialog(
+                title: 'Hapus Utang',
+                middleText: 'Anda yakin ingin menghapus utang ${controller.formatCurrency(debt.amount)} untuk ${debt.customerName}?',
+                textConfirm: 'Ya, Hapus',
+                textCancel: 'Batal',
+                confirmTextColor: Colors.white,
+                onConfirm: () async {
+                  Get.back(); // Close dialog
+                  await controller.debtService.deleteDebt(debt.id!);
+                  await controller.loadDebts();
+                  Get.snackbar(
+                    'Berhasil',
+                    'Utang berhasil dihapus.',
+                    snackPosition: SnackPosition.BOTTOM,
+                    backgroundColor: Colors.green,
+                    colorText: Colors.white,
+                  );
+                },
+              );
+            },
+          ),
+        ],
       ),
     );
   }
