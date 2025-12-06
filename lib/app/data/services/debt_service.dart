@@ -1,57 +1,58 @@
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:jagawarung/app/data/models/transaction_model.dart';
+import '../providers/real_transaction_provider.dart';
 import '../models/debt_model.dart';
 
 
 class DebtService {
-  final _supabase = Supabase.instance.client;
-  static const String _tableName = 'debts';
+  final RealTransactionProvider _provider = RealTransactionProvider();
 
-
-  Future<DebtModel> addDebt(DebtModel debt) async {
+  Future<TransactionModel> addDebt(TransactionModel debt) async {
     try {
-      final response = await _supabase
-          .from(_tableName)
-          .insert(debt.toJson())
-          .select()
-          .single();
-
-      return DebtModel.fromJson(response);
+      // Hutang pakai upsert=true untuk merge kalau ada yang sama
+      return await _provider.createTransaction(debt, upsert: true);
     } catch (e) {
       throw Exception('Failed to add debt: $e');
     }
   }
 
-
-  Future<List<DebtModel>> getAllDebts() async {
+  /// Voice-first debt recording via agent endpoint
+  Future<VoiceAgentResult> addDebtViaAgent(String prompt) async {
     try {
-      final response = await _supabase
-          .from(_tableName)
-          .select()
-          .order('created_at', ascending: false);
+      return await _provider.voiceAgentTransaction(
+        type: TransactionType.debts,
+        prompt: prompt,
+      );
+    } catch (e) {
+      throw Exception('Failed to add debt via agent: $e');
+    }
+  }
 
-      return (response as List)
-          .map((json) => DebtModel.fromJson(json))
-          .toList();
+
+  Future<List<TransactionModel>> getAllDebts() async {
+    try {
+      final allTransactions = await _provider.getTransactions(
+        type: 'debts',
+        orderBy: 'created_at',
+        orderDirection: 'desc',
+      );
+      return allTransactions;
     } catch (e) {
       throw Exception('Failed to get debts: $e');
     }
   }
 
 
-  Future<List<DebtModel>> getDebtsByCustomer(String customerName) async {
+  Future<List<TransactionModel>> getDebtsByCustomer(String customerName) async {
     try {
-      final normalizedName = customerName.trim();
-
-      final response = await _supabase
-          .from(_tableName)
-          .select()
-        
-          .ilike('debtor_name', '%$normalizedName%')
-          .order('created_at', ascending: false);
-
-      return (response as List)
-          .map((json) => DebtModel.fromJson(json))
-          .toList();
+      final normalizedName = customerName.trim().toLowerCase();
+      
+      // Get all debts then filter by customer name (backend doesn't support debtor_name filter yet)
+      final allDebts = await getAllDebts();
+      
+      return allDebts.where((debt) {
+        final debtorName = debt.customerName?.toLowerCase() ?? '';
+        return debtorName.contains(normalizedName);
+      }).toList();
     } catch (e) {
       throw Exception('Failed to get debts by customer: $e');
     }
@@ -63,7 +64,7 @@ class DebtService {
       final debts = await getDebtsByCustomer(customerName);
       final total = debts.fold<double>(
         0.0,
-        (double sum, DebtModel debt) => sum + debt.amount,
+        (double sum, TransactionModel debt) => sum + debt.amount,
       );
       return total;
     } catch (e) {
@@ -89,25 +90,31 @@ class DebtService {
 
   Future<void> deleteDebt(String debtId) async {
     try {
-      await _supabase.from(_tableName).delete().eq('id', debtId);
+      await _provider.deleteTransaction(debtId);
     } catch (e) {
       throw Exception('Failed to delete debt: $e');
     }
   }
 
-
-  Future<DebtModel> updateDebt(DebtModel debt) async {
+  Future<TransactionModel> updateDebt(TransactionModel debt) async {
     try {
-      final response = await _supabase
-          .from(_tableName)
-          .update(debt.toJson())
-          .eq('id', debt.id!)
-          .select()
-          .single();
-
-      return DebtModel.fromJson(response);
+      if (debt.id == null) {
+        throw Exception('Debt ID is required for update');
+      }
+      await _provider.updateTransaction(debt.id!, debt);
+      return debt;
     } catch (e) {
       throw Exception('Failed to update debt: $e');
+    }
+  }
+
+  /// Pelunasan hutang
+  /// Akan mengubah transaksi dari debts → earning
+  Future<TransactionModel> repayDebt(String debtId) async {
+    try {
+      return await _provider.repayDebt(debtId);
+    } catch (e) {
+      throw Exception('Failed to repay debt: $e');
     }
   }
 }
