@@ -11,7 +11,6 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-
       print('[AuthRepository] signIn called with email: $email');
 
       final response = await _supabase.auth.signInWithPassword(

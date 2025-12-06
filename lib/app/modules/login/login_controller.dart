@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:jagawarung/app/data/repositories/auth_repository.dart';
 import '../../routes/app_routes.dart';
 
-
 class LoginController extends GetxController {
 
   final AuthRepository _authRepository = AuthRepository();

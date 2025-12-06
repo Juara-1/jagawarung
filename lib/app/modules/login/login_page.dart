@@ -11,7 +11,6 @@ class LoginPage extends GetView<LoginController> {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      // Background color is now handled by the theme's scaffoldBackgroundColor
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(

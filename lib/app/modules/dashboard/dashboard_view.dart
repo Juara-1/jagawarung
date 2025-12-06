@@ -25,6 +25,8 @@ class DashboardView extends GetView<DashboardController> {
                 children: [
                   _buildHeader(context),
                   const SizedBox(height: 24),
+                  _buildTimeRange(context),
+                  const SizedBox(height: 12),
                   _buildSummaryCards(context),
                   const SizedBox(height: 28),
                   _buildRecentTransactions(context),
@@ -116,6 +118,80 @@ class DashboardView extends GetView<DashboardController> {
     );
   }
 
+  Widget _buildTimeRange(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final ranges = const [
+      {'label': 'Harian', 'value': 'day'},
+      {'label': 'Mingguan', 'value': 'week'},
+      {'label': 'Bulanan', 'value': 'month'}
+    ];
+
+    return Obx(() {
+      final selected = controller.summaryRange.value;
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          padding: const EdgeInsets.fromLTRB(14, 12, 14, 10),
+          decoration: BoxDecoration(
+            color: colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+            border: Border.all(
+              color: colorScheme.outline.withOpacity(0.12),
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Ringkasan periode',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: ranges.map((r) {
+                  final value = r['value']!;
+                  final isSelected = selected == value;
+                  return ChoiceChip(
+                    label: Text(r['label']!),
+                    selected: isSelected,
+                    onSelected: (_) => controller.changeSummaryRange(value),
+                    selectedColor: const Color(0xFFFF8F00).withOpacity(0.18), // accent
+                    labelStyle: TextStyle(
+                      color: isSelected ? const Color(0xFFFF8F00) : colorScheme.onSurface,
+                      fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                      side: BorderSide(
+                        color: isSelected
+                            ? const Color(0xFFFF8F00).withOpacity(0.4)
+                            : colorScheme.outline.withOpacity(0.4),
+                      ),
+                    ),
+                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  );
+                }).toList(),
+              ),
+            ],
+          ),
+        ),
+      );
+    });
+  }
+
   Widget _buildSummaryCards(BuildContext context) {
     final theme = Theme.of(context);
     final summary = controller.dashboardSummary.value;
@@ -188,7 +264,7 @@ class DashboardView extends GetView<DashboardController> {
           ),
           const SizedBox(height: 12),
           _SummaryCard(
-            title: 'Total Utang',
+            title: 'Total Utang Pelanggan',
             amount: summary.totalDebt,
             icon: Icons.account_balance_wallet_rounded,
             color: const Color(0xFFF59E0B),
@@ -363,7 +439,7 @@ class DashboardView extends GetView<DashboardController> {
             _VoiceButton(
               isListening: isListening,
               isLoading: isLoading,
-              onTapStart: controller.startListening,
+              onTapStart: () async => await controller.startVoiceInput(),
               onTapEnd: controller.stopListening,
               colorScheme: colorScheme,
             ),

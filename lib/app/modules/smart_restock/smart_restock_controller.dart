@@ -89,7 +89,7 @@ class SmartRestockController extends GetxController {
     }
   }
 
-  /// Save expense transaction
+  
   Future<void> saveExpense() async {
     if (totalAmount.value <= 0) {
       Get.snackbar('Error', 'Total belanja tidak valid');
@@ -112,7 +112,7 @@ class SmartRestockController extends GetxController {
 
       await _txProvider.createTransaction(tx);
 
-      Get.back(); // close reconcile page
+      Get.back(); 
       Get.snackbar(
         '✅ Tercatat',
         'Pengeluaran ${formatCurrency(totalAmount.value)} berhasil dicatat',
@@ -122,7 +122,7 @@ class SmartRestockController extends GetxController {
       _clear();
     } catch (e) {
       errorMessage.value = 'Gagal menyimpan pengeluaran: $e';
-      Get.snackbar('❌ Error', errorMessage.value, backgroundColor: Colors.red.shade100);
+      Get.snackbar(' Error', errorMessage.value, backgroundColor: Colors.red.shade100);
     } finally {
       isSaving.value = false;
     }
@@ -136,7 +136,7 @@ class SmartRestockController extends GetxController {
     amountController.clear();
   }
 
-  /// Format currency
+
   String formatCurrency(double amount) {
     return 'Rp ${amount.toStringAsFixed(0).replaceAllMapped(
           RegExp(r'(\\d{1,3})(?=(\\d{3})+(?!\\d))'),

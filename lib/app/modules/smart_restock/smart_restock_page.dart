@@ -2,8 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'smart_restock_controller.dart';
 
-/// Smart Restock Page
-/// Main page untuk scan invoice feature
+
 class SmartRestockPage extends StatelessWidget {
   const SmartRestockPage({super.key});
 

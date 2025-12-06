@@ -1,80 +1,30 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
-import 'package:speech_to_text/speech_to_text.dart' as stt;
-import 'package:flutter_tts/flutter_tts.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../data/providers/real_transaction_provider.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/models/dashboard_model.dart';
+import '../../common/mixins/voice_mixin.dart';
+import '../../common/utils/format_utils.dart';
 
-class DashboardController extends GetxController {
+class DashboardController extends GetxController with VoiceMixin {
   final RealTransactionProvider _provider = RealTransactionProvider();
-  final stt.SpeechToText _speech = stt.SpeechToText();
-  final FlutterTts _flutterTts = FlutterTts();
 
   final dashboardSummary = Rx<DashboardSummary>(DashboardSummary.empty());
   final recentTransactions = <TransactionModel>[].obs;
   
   final isLoading = false.obs;
-  final isListening = false.obs;
-  final isSpeechAvailable = false.obs;
-  final recognizedText = ''.obs;
   final errorMessage = ''.obs;
+  final summaryRange = 'day'.obs; // day | week | month 
 
-  final List<String> _preferredTtsLangs = const ['id-ID'];
+  @override
+  List<String> get preferredTtsLanguages => const ['id-ID', 'jv-ID', 'en-US'];
 
   @override
   void onInit() {
     super.onInit();
-    _initializeSpeech();
-    _initializeTts();
+    initializeSpeech();
+    initializeTts();
     loadDashboard();
-  }
-
-  Future<void> _initializeSpeech() async {
-    try {
-      final status = await Permission.microphone.request();
-
-      if (status.isGranted) {
-        isSpeechAvailable.value = await _speech.initialize(
-          onStatus: (status) {
-            if (status == 'done' || status == 'notListening') {
-              isListening.value = false;
-            }
-          },
-          onError: (error) {
-            errorMessage.value = 'Error: ${error.errorMsg}';
-            isListening.value = false;
-          },
-        );
-      } else {
-        errorMessage.value = 'Izin mikrofon diperlukan';
-      }
-    } catch (e) {
-      errorMessage.value = 'Gagal menginisialisasi speech: $e';
-    }
-  }
-
-  Future<void> _initializeTts() async {
-    await _setPreferredLanguage();
-    await _flutterTts.setSpeechRate(0.5);
-    await _flutterTts.setVolume(1.0);
-    await _flutterTts.setPitch(1.0);
-  }
-
-  Future<void> _setPreferredLanguage() async {
-    try {
-      final langs = (await _flutterTts.getLanguages)?.cast<String>() ?? [];
-      for (final code in _preferredTtsLangs) {
-        if (langs.contains(code)) {
-          await _flutterTts.setLanguage(code);
-          return;
-        }
-      }
-    } catch (_) {
-      // swallow errors and use default engine language
-      
-    }
   }
 
   Future<void> loadDashboard() async {
@@ -82,7 +32,9 @@ class DashboardController extends GetxController {
       isLoading.value = true;
       errorMessage.value = '';
 
-      final summary = await _provider.getDashboardSummary();
+      final summary = await _provider.getDashboardSummary(
+        timeRange: summaryRange.value,
+      );
       dashboardSummary.value = summary;
 
       final transactions = await _provider.getTransactions();
@@ -101,7 +53,13 @@ class DashboardController extends GetxController {
     }
   }
 
-  Future<void> startListening() async {
+  void changeSummaryRange(String range) {
+    if (summaryRange.value == range) return;
+    summaryRange.value = range;
+    loadDashboard();
+  }
+
+  Future<void> startVoiceInput() async {
     if (!isSpeechAvailable.value) {
       errorMessage.value = 'Speech recognition tidak tersedia';
       Get.snackbar('Error', errorMessage.value);
@@ -109,25 +67,7 @@ class DashboardController extends GetxController {
     }
 
     errorMessage.value = '';
-    recognizedText.value = '';
-    isListening.value = true;
-
-    await _speech.listen(
-      onResult: (result) {
-        recognizedText.value = result.recognizedWords;
-        if (result.finalResult) {
-          _handleVoiceResult(result.recognizedWords);
-        }
-      },
-      listenFor: const Duration(seconds: 10),
-      pauseFor: const Duration(seconds: 3),
-      localeId: 'id_ID',
-    );
-  }
-
-  Future<void> stopListening() async {
-    await _speech.stop();
-    isListening.value = false;
+    await super.startListening(onResult: _handleVoiceResult);
   }
 
   Future<void> _handleVoiceResult(String transcript) async {
@@ -146,7 +86,7 @@ class DashboardController extends GetxController {
         prompt: transcript,
       );
 
-      await _speak(agentResult.message);
+      await speak(agentResult.message);
 
       Get.snackbar(
         'Berhasil',
@@ -159,7 +99,7 @@ class DashboardController extends GetxController {
       await loadDashboard();
     } catch (e) {
       errorMessage.value = 'Gagal memproses: $e';
-      await _speak('Maaf, saya tidak mengerti perintah Anda');
+      await speak('Maaf, saya tidak mengerti perintah Anda');
       Get.snackbar(
         'Error',
         errorMessage.value,
@@ -280,7 +220,7 @@ class DashboardController extends GetxController {
 
       await _provider.createTransaction(transaction);
 
-      await _speak('Transaksi berhasil disimpan');
+      await speak('Transaksi berhasil disimpan');
       
       Get.snackbar(
         'Berhasil',
@@ -293,7 +233,7 @@ class DashboardController extends GetxController {
       await loadDashboard();
     } catch (e) {
       errorMessage.value = 'Gagal menyimpan: $e';
-      await _speak('Gagal menyimpan transaksi');
+      await speak('Gagal menyimpan transaksi');
       Get.snackbar(
         'Error',
         errorMessage.value,
@@ -306,21 +246,11 @@ class DashboardController extends GetxController {
     }
   }
 
-  Future<void> _speak(String text) async {
-    await _flutterTts.speak(text);
-  }
-
-  String formatCurrency(double amount) {
-    return 'Rp ${amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'),
-      (Match m) => '${m[1]}.',
-    )}';
-  }
+  String formatCurrency(double amount) => FormatUtils.formatCurrency(amount);
 
   @override
   void onClose() {
-    _speech.stop();
-    _flutterTts.stop();
+    disposeVoice();
     super.onClose();
   }
 }

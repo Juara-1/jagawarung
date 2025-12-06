@@ -1,17 +1,16 @@
-/// OCR Invoice Item Model
-/// Model untuk item hasil OCR dari Kolosal AI
+
 class OcrInvoiceItem {
-  final String name;      // Nama barang dari OCR
-  final int quantity;     // Jumlah
-  final double price;     // Harga per item
-  final double total;     // Total harga
+  final String name;      
+  final int quantity;     
+  final double price;   
+  final double total;     
   
-  // For matching with existing products
+  
   String? matchedProductId;
   String? matchedProductName;
   double matchConfidence;
   
-  // User can override
+ 
  bool isManuallyEdited;
   
   OcrInvoiceItem({
@@ -57,8 +56,7 @@ class OcrInvoiceItem {
   }
 }
 
-/// OCR Invoice Response Model
-/// Model untuk response dari Kolosal AI OCR
+
 class OcrInvoiceResponse {
   final String? supplierName;
   final String? invoiceNumber;

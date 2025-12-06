@@ -5,45 +5,49 @@ import '../models/dashboard_model.dart';
 import '../services/token_service.dart';
 
 class RealTransactionProvider {
-  late final Dio _dio;
+  final Dio _dio;
   final String baseUrl;
 
-  RealTransactionProvider({String? baseUrl})
-      : baseUrl = baseUrl ?? Environment.apiBaseUrl {
-    _dio = Dio(BaseOptions(
-      baseUrl: '${this.baseUrl}/api',
-      connectTimeout: const Duration(seconds: 30),
-      receiveTimeout: const Duration(seconds: 30),
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json',
-      },
-    ));
+  RealTransactionProvider({
+    String? baseUrl,
+    Dio? dio,
+  })  : baseUrl = baseUrl ?? Environment.apiBaseUrl,
+        _dio = dio ??
+            Dio(BaseOptions(
+              baseUrl: '${(baseUrl ?? Environment.apiBaseUrl)}/api',
+              connectTimeout: const Duration(seconds: 30),
+              receiveTimeout: const Duration(seconds: 30),
+              headers: {
+                'Content-Type': 'application/json',
+                'Accept': 'application/json',
+              },
+            )) {
+    // Skip interceptors if custom Dio is injected (typically for testing)
+    if (dio == null) {
+      _dio.interceptors.add(InterceptorsWrapper(
+        onRequest: (options, handler) async {
+          final token = await TokenService.getAccessToken();
+          if (token != null) {
+            options.headers['Authorization'] = 'Bearer $token';
+            print('[API] Request with Bearer token');
+          }
+          return handler.next(options);
+        },
+        onError: (error, handler) async {
+          if (error.response?.statusCode == 401) {
+            print('[API] Token expired, need re-login');
+          }
+          return handler.next(error);
+        },
+      ));
 
-    
-    _dio.interceptors.add(InterceptorsWrapper(
-      onRequest: (options, handler) async {
-        final token = await TokenService.getAccessToken();
-        if (token != null) {
-          options.headers['Authorization'] = 'Bearer $token';
-          print('[API] Request with Bearer token');
-        }
-        return handler.next(options);
-      },
-      onError: (error, handler) async {
-        if (error.response?.statusCode == 401) {
-          print('[API] Token expired, need re-login');
-        }
-        return handler.next(error);
-      },
-    ));
-
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      error: true,
-      logPrint: (obj) => print('[Dio] $obj'),
-    ));
+      _dio.interceptors.add(LogInterceptor(
+        requestBody: true,
+        responseBody: true,
+        error: true,
+        logPrint: (obj) => print('[Dio] $obj'),
+      ));
+    }
   }
 
   Future<ParsedVoiceResult> parseVoice(String transcript) async {
@@ -92,7 +96,6 @@ class RealTransactionProvider {
       final response = await _dio.post(
         '/agent/transactions',
         data: {
-          'type': type.value,
           'prompt': prompt,
         },
       );

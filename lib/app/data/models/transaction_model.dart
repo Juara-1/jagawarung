@@ -21,6 +21,7 @@ class TransactionModel {
     this.invoiceData,
   });
 
+
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as String?,

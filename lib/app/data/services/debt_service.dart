@@ -4,7 +4,10 @@ import '../models/debt_model.dart';
 
 
 class DebtService {
-  final RealTransactionProvider _provider = RealTransactionProvider();
+  final RealTransactionProvider _provider;
+
+  DebtService({RealTransactionProvider? provider})
+      : _provider = provider ?? RealTransactionProvider();
 
   Future<TransactionModel> addDebt(TransactionModel debt) async {
     try {
@@ -15,7 +18,7 @@ class DebtService {
     }
   }
 
-  /// Voice-first debt recording via agent endpoint
+
   Future<VoiceAgentResult> addDebtViaAgent(String prompt) async {
     try {
       return await _provider.voiceAgentTransaction(
@@ -46,7 +49,6 @@ class DebtService {
     try {
       final normalizedName = customerName.trim().toLowerCase();
       
-      // Get all debts then filter by customer name (backend doesn't support debtor_name filter yet)
       final allDebts = await getAllDebts();
       
       return allDebts.where((debt) {
@@ -108,8 +110,7 @@ class DebtService {
     }
   }
 
-  /// Pelunasan hutang
-  /// Akan mengubah transaksi dari debts → earning
+
   Future<TransactionModel> repayDebt(String debtId) async {
     try {
       return await _provider.repayDebt(debtId);

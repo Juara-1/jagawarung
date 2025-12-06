@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
+import '../../common/utils/format_utils.dart';
+import '../../common/utils/transaction_type_utils.dart';
 import '../../data/models/transaction_model.dart';
 import '../../data/providers/real_transaction_provider.dart';
 
@@ -74,38 +76,12 @@ class TransactionsController extends GetxController {
     fetchTransactions(reset: true);
   }
 
-  String formatCurrency(double amount) {
-    return 'Rp ${amount.toStringAsFixed(0).replaceAllMapped(
-      RegExp(r'(\\d{1,3})(?=(\\d{3})+(?!\\d))'),
-      (Match m) => '${m[1]}.',
-    )}';
-  }
+  String formatCurrency(double amount) => FormatUtils.formatCurrency(amount);
 
-  String formatDate(DateTime date) {
-    final d = date.toLocal();
-    return '${d.day.toString().padLeft(2, '0')}/${d.month.toString().padLeft(2, '0')}/${d.year}';
-  }
+  String formatDate(DateTime date) => FormatUtils.formatDate(date);
 
-  Color typeColor(TransactionType type) {
-    switch (type) {
-      case TransactionType.earning:
-        return Colors.green;
-      case TransactionType.spending:
-        return Colors.red;
-      case TransactionType.debts:
-        return Colors.orange;
-    }
-  }
+  Color typeColor(TransactionType type) => TransactionTypeUtils.getColor(type);
 
-  String typeLabel(TransactionType type) {
-    switch (type) {
-      case TransactionType.earning:
-        return 'Pemasukan';
-      case TransactionType.spending:
-        return 'Pengeluaran';
-      case TransactionType.debts:
-        return 'Utang';
-    }
-  }
+  String typeLabel(TransactionType type) => TransactionTypeUtils.getLabel(type);
 }
 

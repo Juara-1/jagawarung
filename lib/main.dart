@@ -8,14 +8,12 @@ import 'app/routes/app_routes.dart';
 import 'app/core/theme.dart';
 import 'app/data/services/token_service.dart';
 
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   try {
     await dotenv.load(fileName: ".env");
 
-   
     Environment.validate();
 
     await Supabase.initialize(
@@ -62,7 +60,6 @@ void main() async {
   }
 }
 
-
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
 
@@ -83,10 +80,10 @@ class _MyAppState extends State<MyApp> {
   Future<void> _checkAutoLogin() async {
     try {
       final hasToken = await TokenService.hasToken();
-      
-          if (hasToken) {
-            print('[MyApp] Found saved token, auto-login to dashboard');
-            _initialRoute = AppRoutes.main;
+
+      if (hasToken) {
+        print('[MyApp] Found saved token, auto-login to dashboard');
+        _initialRoute = AppRoutes.main;
       } else {
         print('[MyApp] No saved token, showing login');
         _initialRoute = AppRoutes.login;
@@ -138,7 +135,7 @@ class _MyAppState extends State<MyApp> {
 
     return GetMaterialApp(
       title: 'Jaga Warung',
-      debugShowCheckedModeBanner: false,   
+      debugShowCheckedModeBanner: false,
       theme: AppTheme.lightTheme,
       initialRoute: _initialRoute,
       getPages: AppPages.routes,
