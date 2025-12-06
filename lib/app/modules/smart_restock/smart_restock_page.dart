@@ -18,7 +18,7 @@ class SmartRestockPage extends StatelessWidget {
         foregroundColor: Colors.white,
       ),
       body: Obx(() {
-        if (controller.isScanning.value || controller.isProcessing.value) {
+        if (controller.isScanning.value) {
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
