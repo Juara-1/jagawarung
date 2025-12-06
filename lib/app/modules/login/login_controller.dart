@@ -79,9 +79,8 @@ class LoginController extends GetxController {
           colorText: Colors.white,
           snackPosition: SnackPosition.TOP,
         );
-
-     
-        Get.offAllNamed(AppRoutes.home);
+        
+        Get.offAllNamed(AppRoutes.main);
       } else {
         Get.snackbar(
           'Login Gagal',
