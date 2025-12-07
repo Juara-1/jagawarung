@@ -37,10 +37,10 @@
 - Catat transaksi (pemasukan/pengeluaran/utang) dengan **suara**
 - Natural Language Processing via **Google Gemini AI**
 - Multi-language TTS: **Bahasa Sunda → Jawa → Indonesia** (fallback otomatis)
-- Animasi mic ala Siri dengan pulsing effect
+
 
 ### 📊 Dashboard Real-time
-- Ringkasan harian/mingguan/bulanan (income, expense, debt)
+- Ringkasan harian/mingguan/bulanan (spending, earning, debt)
 - Chart transaksi terbaru
 - Filtering by period (day/week/month)
 - Pull-to-refresh & shimmer loading
@@ -81,9 +81,9 @@
     <td align="center"><b>Manajemen Utang</b><br><i>(Debt List)</i></td>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/dashboard.png" width="250" alt="Dashboard"/></td>
-    <td><img src="assets/screenshots/voice.png" width="250" alt="Voice"/></td>
-    <td><img src="assets/screenshots/debt.png" width="250" alt="Debt"/></td>
+    <td><img src="https://github.com/user-attachments/assets/ea32c7b4-91d9-45d9-8d8c-aac49d1645a5" width="250" alt="Dashboard"/></td>
+    <td><img src="https://github.com/user-attachments/assets/e2f0149b-d527-4dc0-abf5-e2f40962c917" width="250" alt="Voice"/></td>
+    <td><img src="https://github.com/user-attachments/assets/3f037429-e4b0-4007-a6c3-81a6107f93a9" width="250" alt="Debt"/></td>
   </tr>
   <tr>
     <td align="center"><b>OCR Scanner</b><br><i>(Receipt Scan)</i></td>
@@ -91,14 +91,14 @@
     <td align="center"><b>Login</b><br><i>(Authentication)</i></td>
   </tr>
   <tr>
-    <td><img src="assets/screenshots/ocr.png" width="250" alt="OCR"/></td>
-    <td><img src="assets/screenshots/transactions.png" width="250" alt="Transactions"/></td>
-    <td><img src="assets/screenshots/login.png" width="250" alt="Login"/></td>
+    <td><img src="https://github.com/user-attachments/assets/a8e38c6f-ced7-40ad-8bf7-d96ec88c3168" width="250" alt="OCR"/></td>
+    <td><img src="https://github.com/user-attachments/assets/fc33a50c-c6fd-4b89-b068-fe22e9a5e8bd" width="250" alt="Transactions"/></td>
+    <td><img src="https://github.com/user-attachments/assets/50e37f5d-690d-4f5e-8dd3-6eecb7074764" width="250" alt="Login"/></td>
   </tr>
 </table>
 </div>
 
-> **Note:** Placeholder untuk screenshots. Setelah build release selesai, ambil screenshot dari device dan simpan di `assets/screenshots/`
+
 
 ---
 
@@ -121,7 +121,7 @@
 ### Backend & Services
 | Service | Purpose |
 |:--------|:--------|
-| **Custom API (Express.js)** | Backend untuk transaksi, deployed di **Render** |
+| ** API (Express.js)** | Backend untuk transaksi, deployed di **Render** |
 | **Supabase** | Authentication (Login/Register) |
 | **Google Gemini AI** | Natural Language Processing untuk voice commands |
 | **Kolosal AI OCR** | Optical Character Recognition untuk scan nota |
@@ -145,7 +145,7 @@ Pastikan sudah terinstall:
 
 ### Step 1: Clone Repository
 ```bash
-git clone https://github.com/username/jagawarung.git
+git clone https://github.com/Juara-1/jagawarung.git
 cd jagawarung
 ```
 
@@ -394,9 +394,9 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 **Built with ❤️ by Juara 1 Hackathon IMPHNEN**
 
-- **Developer:** Arvan Yudhistia Ardana
+- **Developer:** Arvan Yudhistia Ardana & Daffa Alexander
 - **Contact:** [arvanardana1@gmail.com]
-- **Repository:** [github.com/arvardy184/jagawarung](https://github.com/username/jagawarung)
+- **Repository:** [https://github.com/Juara-1/jagawarung](JAGA WARUNG)
 
 ---
 
