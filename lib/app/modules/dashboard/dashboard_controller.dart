@@ -12,7 +12,8 @@ class DashboardController extends GetxController with VoiceMixin {
   final dashboardSummary = Rx<DashboardSummary>(DashboardSummary.empty());
   final recentTransactions = <TransactionModel>[].obs;
   
-  final isLoading = false.obs;
+  final isLoadingDashboard = false.obs;
+  final isVoiceProcessing = false.obs;
   final errorMessage = ''.obs;
   final summaryRange = 'day'.obs; // day | week | month 
 
@@ -29,7 +30,7 @@ class DashboardController extends GetxController with VoiceMixin {
 
   Future<void> loadDashboard() async {
     try {
-      isLoading.value = true;
+      isLoadingDashboard.value = true;
       errorMessage.value = '';
 
       final summary = await _provider.getDashboardSummary(
@@ -49,7 +50,7 @@ class DashboardController extends GetxController with VoiceMixin {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      isLoading.value = false;
+      isLoadingDashboard.value = false;
     }
   }
 
@@ -77,7 +78,7 @@ class DashboardController extends GetxController with VoiceMixin {
     }
 
     try {
-      isLoading.value = true;
+      isVoiceProcessing.value = true;
       isListening.value = false;
       final type = _inferType(transcript);
 
@@ -108,7 +109,7 @@ class DashboardController extends GetxController with VoiceMixin {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      isLoading.value = false;
+      isVoiceProcessing.value = false;
     }
   }
 
@@ -208,7 +209,7 @@ class DashboardController extends GetxController with VoiceMixin {
     String? customerName,
   }) async {
     try {
-      isLoading.value = true;
+      isVoiceProcessing.value = true;
 
       final transaction = TransactionModel(
         type: type,
@@ -242,7 +243,7 @@ class DashboardController extends GetxController with VoiceMixin {
         snackPosition: SnackPosition.BOTTOM,
       );
     } finally {
-      isLoading.value = false;
+      isVoiceProcessing.value = false;
     }
   }
 

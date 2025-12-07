@@ -24,7 +24,7 @@ class DebtController extends GetxController {
   final debts = <TransactionModel>[].obs;
   final errorMessage = ''.obs;
   final isSpeechAvailable = false.obs;
-  final List<String> _preferredTtsLangs = const ['jv-ID'];
+  final List<String> _preferredTtsLangs = const ['id-ID', 'jv-ID', 'en-US'];
 
   @override
   void onInit() {

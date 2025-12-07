@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'package:jagawarung/app/routes/app_routes.dart';
+import '../../common/utils/format_utils.dart';
+import '../../common/utils/transaction_type_utils.dart';
 import 'dashboard_controller.dart';
 import '../../data/models/transaction_model.dart';
+import 'widgets/shimmer_loading.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -11,8 +14,8 @@ class DashboardView extends GetView<DashboardController> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Obx(() {
-        if (controller.isLoading.value && controller.dashboardSummary.value.transactionCount == 0) {
-          return const Center(child: CircularProgressIndicator());
+        if (controller.isLoadingDashboard.value && controller.dashboardSummary.value.transactionCount == 0) {
+          return const SafeArea(child: DashboardShimmer());
         }
 
         return SafeArea(
@@ -242,7 +245,7 @@ class DashboardView extends GetView<DashboardController> {
           Row(
             children: [
               Expanded(
-                child: _SummaryCard(
+                child: SummaryCard(
                   title: 'Pemasukan',
                   amount: summary.todayIncome,
                   icon: Icons.trending_up_rounded,
@@ -252,7 +255,7 @@ class DashboardView extends GetView<DashboardController> {
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: _SummaryCard(
+                child: SummaryCard(
                   title: 'Pengeluaran',
                   amount: summary.todayExpense,
                   icon: Icons.trending_down_rounded,
@@ -263,7 +266,7 @@ class DashboardView extends GetView<DashboardController> {
             ],
           ),
           const SizedBox(height: 12),
-          _SummaryCard(
+          SummaryCard(
             title: 'Total Utang Pelanggan',
             amount: summary.totalDebt,
             icon: Icons.account_balance_wallet_rounded,
@@ -316,7 +319,7 @@ class DashboardView extends GetView<DashboardController> {
             ),
             const SizedBox(height: 12),
             ...controller.recentTransactions.asMap().entries.map(
-              (entry) => _TransactionTile(
+              (entry) => TransactionTile(
                 transaction: entry.value,
                 controller: controller,
                 isLast: entry.key == controller.recentTransactions.length - 1,
@@ -374,8 +377,8 @@ class DashboardView extends GetView<DashboardController> {
 
     return Obx(() {
       final isListening = controller.isListening.value;
-      final isLoading = controller.isLoading.value;
-      final statusText = isLoading
+      final isProcessing = controller.isVoiceProcessing.value;
+      final statusText = isProcessing
           ? 'Memproses...'
           : (isListening ? 'Mendengarkan...' : 'Ketuk untuk bicara');
 
@@ -436,9 +439,9 @@ class DashboardView extends GetView<DashboardController> {
               ),
             ),
             const SizedBox(height: 12),
-            _VoiceButton(
+            VoiceButton(
               isListening: isListening,
-              isLoading: isLoading,
+              isLoading: isProcessing,
               onTapStart: () async => await controller.startVoiceInput(),
               onTapEnd: controller.stopListening,
               colorScheme: colorScheme,
@@ -450,174 +453,8 @@ class DashboardView extends GetView<DashboardController> {
   }
 }
 
-class _VoiceButton extends StatefulWidget {
-  final bool isListening;
-  final bool isLoading;
-  final VoidCallback onTapStart;
-  final VoidCallback onTapEnd;
-  final ColorScheme colorScheme;
 
-  const _VoiceButton({
-    required this.isListening,
-    required this.isLoading,
-    required this.onTapStart,
-    required this.onTapEnd,
-    required this.colorScheme,
-  });
-
-  @override
-  State<_VoiceButton> createState() => _VoiceButtonState();
-}
-
-class _VoiceButtonState extends State<_VoiceButton>
-    with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnim;
-  late Animation<double> _ringOpacity;
-
-  @override
-  void initState() {
-    super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1200),
-      lowerBound: 0.0,
-      upperBound: 1.0,
-    );
-
-    _scaleAnim = Tween<double>(begin: 1.0, end: 1.2).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
-    );
-
-    _ringOpacity = Tween<double>(begin: 0.4, end: 0.0).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
-  }
-
-  @override
-  void didUpdateWidget(covariant _VoiceButton oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    _updateAnimation();
-  }
-
-  void _updateAnimation() {
-    if (widget.isListening && !widget.isLoading) {
-      _controller.repeat();
-    } else {
-      _controller.stop();
-      _controller.reset();
-    }
-  }
-
-  @override
-  void dispose() {
-    _controller.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        if (widget.isListening) {
-          widget.onTapEnd();
-        } else {
-          widget.onTapStart();
-        }
-      },
-      onLongPressStart: (_) => widget.onTapStart(),
-      onLongPressEnd: (_) => widget.onTapEnd(),
-      child: Semantics(
-        button: true,
-        label: widget.isListening
-            ? 'Sedang mendengarkan. Lepas untuk berhenti'
-            : 'Ketuk atau tahan untuk mulai bicara',
-        child: AnimatedBuilder(
-          animation: _controller,
-          builder: (context, child) {
-            return Stack(
-              alignment: Alignment.center,
-              children: [
-                // Outer pulsing ring
-                if (widget.isListening)
-                  Container(
-                    height: 120 * _scaleAnim.value,
-                    width: 120 * _scaleAnim.value,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red.withOpacity(_ringOpacity.value * 0.3),
-                    ),
-                  ),
-                // Inner pulsing ring
-                if (widget.isListening)
-                  Container(
-                    height: 100,
-                    width: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.red.withOpacity(0.15),
-                    ),
-                  ),
-                // Main mic button
-                AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  height: 80,
-                  width: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: widget.isListening
-                        ? const LinearGradient(
-                            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A52)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          )
-                        : LinearGradient(
-                            colors: [
-                              widget.colorScheme.primary,
-                              widget.colorScheme.primary.withOpacity(0.8),
-                            ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: (widget.isListening
-                                ? Colors.red
-                                : widget.colorScheme.primary)
-                            .withOpacity(0.4),
-                        blurRadius: widget.isListening ? 28 : 16,
-                        spreadRadius: widget.isListening ? 4 : 2,
-                        offset: const Offset(0, 8),
-                      ),
-                    ],
-                  ),
-                  child: widget.isLoading
-                      ? const Center(
-                          child: SizedBox(
-                            width: 32,
-                            height: 32,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 3,
-                            ),
-                          ),
-                        )
-                      : Icon(
-                          widget.isListening ? Icons.mic : Icons.mic_none_rounded,
-                          size: 38,
-                          color: Colors.white,
-                        ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _SummaryCard extends StatelessWidget {
+class SummaryCard extends StatelessWidget {
   final String title;
   final double amount;
   final IconData icon;
@@ -625,18 +462,21 @@ class _SummaryCard extends StatelessWidget {
   final DashboardController controller;
   final bool isWide;
 
-  const _SummaryCard({
+  const SummaryCard({
     required this.title,
     required this.amount,
     required this.icon,
     required this.color,
     required this.controller,
     this.isWide = false,
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final amountText =
+        controller.formatCurrency(amount).replaceFirst('Rp ', 'Rp\u00A0');
 
     return Container(
       decoration: BoxDecoration(
@@ -704,13 +544,20 @@ class _SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Semantics(
-            label: '$title: ${controller.formatCurrency(amount)}',
-            child: Text(
-              controller.formatCurrency(amount),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+            label: '$title: $amountText',
+            child: FittedBox(
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              child: Text(
+                amountText,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
+                softWrap: false,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.4,
+                ),
               ),
             ),
           ),
@@ -720,12 +567,12 @@ class _SummaryCard extends StatelessWidget {
   }
 }
 
-class _TransactionTile extends StatelessWidget {
+class TransactionTile extends StatelessWidget {
   final TransactionModel transaction;
   final DashboardController controller;
   final bool isLast;
 
-  const _TransactionTile({
+  const TransactionTile({
     required this.transaction,
     required this.controller,
     this.isLast = false,
@@ -734,8 +581,8 @@ class _TransactionTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final color = _getColorForType(transaction.type);
-    final icon = _getIconForType(transaction.type);
+    final color = TransactionTypeUtils.getColor(transaction.type);
+    final icon = TransactionTypeUtils.getIcon(transaction.type);
 
     return Container(
       margin: EdgeInsets.only(bottom: isLast ? 0 : 12),
@@ -779,7 +626,7 @@ class _TransactionTile extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    transaction.customerName ?? _getTypeName(transaction.type),
+                    transaction.customerName ?? TransactionTypeUtils.getLabel(transaction.type),
                     style: theme.textTheme.titleMedium?.copyWith(
                       fontWeight: FontWeight.w600,
                       letterSpacing: -0.2,
@@ -825,49 +672,172 @@ class _TransactionTile extends StatelessWidget {
     );
   }
 
-  Color _getColorForType(TransactionType type) {
-    switch (type) {
-      case TransactionType.earning:
-        return const Color(0xFF10B981);
-      case TransactionType.spending:
-        return const Color(0xFFEF4444);
-      case TransactionType.debts:
-        return const Color(0xFFF59E0B);
-    }
-  }
-
-  IconData _getIconForType(TransactionType type) {
-    switch (type) {
-      case TransactionType.earning:
-        return Icons.trending_up_rounded;
-      case TransactionType.spending:
-        return Icons.trending_down_rounded;
-      case TransactionType.debts:
-        return Icons.account_balance_wallet_rounded;
-    }
-  }
-
-  String _getTypeName(TransactionType type) {
-    switch (type) {
-      case TransactionType.earning:
-        return 'Pemasukan';
-      case TransactionType.spending:
-        return 'Pengeluaran';
-      case TransactionType.debts:
-        return 'Utang';
-    }
-  }
-
   String _formatDateTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final difference = now.difference(dateTime);
+    return FormatUtils.formatDateTime(dateTime);
+  }
+}
 
-    if (difference.inDays == 0) {
-      return 'Hari ini ${dateTime.hour.toString().padLeft(2, '0')}:${dateTime.minute.toString().padLeft(2, '0')}';
-    } else if (difference.inDays == 1) {
-      return 'Kemarin';
+class VoiceButton extends StatefulWidget {
+  final bool isListening;
+  final bool isLoading;
+  final VoidCallback onTapStart;
+  final VoidCallback onTapEnd;
+  final ColorScheme colorScheme;
+
+  const VoiceButton({
+    required this.isListening,
+    required this.isLoading,
+    required this.onTapStart,
+    required this.onTapEnd,
+    required this.colorScheme,
+    super.key,
+  });
+
+  @override
+  State<VoiceButton> createState() => _VoiceButtonState();
+}
+
+class _VoiceButtonState extends State<VoiceButton>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _ringOpacity;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+      lowerBound: 0.0,
+      upperBound: 1.0,
+    );
+
+    _scaleAnim = Tween<double>(begin: 1.0, end: 1.2).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    );
+
+    _ringOpacity = Tween<double>(begin: 0.4, end: 0.0).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+  }
+
+  @override
+  void didUpdateWidget(covariant VoiceButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _updateAnimation();
+  }
+
+  void _updateAnimation() {
+    if (widget.isListening && !widget.isLoading) {
+      _controller.repeat();
     } else {
-      return '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      _controller.stop();
+      _controller.reset();
     }
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {
+        if (widget.isListening) {
+          widget.onTapEnd();
+        } else {
+          widget.onTapStart();
+        }
+      },
+      onLongPressStart: (_) => widget.onTapStart(),
+      onLongPressEnd: (_) => widget.onTapEnd(),
+      child: Semantics(
+        button: true,
+        label: widget.isListening
+            ? 'Sedang mendengarkan. Lepas untuk berhenti'
+            : 'Ketuk atau tahan untuk mulai bicara',
+        child: AnimatedBuilder(
+          animation: _controller,
+          builder: (context, child) {
+            return Stack(
+              alignment: Alignment.center,
+              children: [
+                if (widget.isListening)
+                  Container(
+                    height: 120 * _scaleAnim.value,
+                    width: 120 * _scaleAnim.value,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red.withOpacity(_ringOpacity.value * 0.3),
+                    ),
+                  ),
+                if (widget.isListening)
+                  Container(
+                    height: 100,
+                    width: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.red.withOpacity(0.15),
+                    ),
+                  ),
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  height: 80,
+                  width: 80,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: widget.isListening
+                        ? const LinearGradient(
+                            colors: [Color(0xFFFF6B6B), Color(0xFFEE5A52)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          )
+                        : LinearGradient(
+                            colors: [
+                              widget.colorScheme.primary,
+                              widget.colorScheme.primary.withOpacity(0.8),
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: (widget.isListening
+                                ? Colors.red
+                                : widget.colorScheme.primary)
+                            .withOpacity(0.4),
+                        blurRadius: widget.isListening ? 28 : 16,
+                        spreadRadius: widget.isListening ? 4 : 2,
+                        offset: const Offset(0, 8),
+                      ),
+                    ],
+                  ),
+                  child: widget.isLoading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 32,
+                            height: 32,
+                            child: CircularProgressIndicator(
+                              color: Colors.white,
+                              strokeWidth: 3,
+                            ),
+                          ),
+                        )
+                      : Icon(
+                          widget.isListening ? Icons.mic : Icons.mic_none_rounded,
+                          size: 38,
+                          color: Colors.white,
+                        ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
   }
 }

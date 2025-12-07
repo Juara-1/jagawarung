@@ -13,8 +13,8 @@ class SmartRestockPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Smart Restock'),
-        backgroundColor: const Color(0xFF6C5CE7),
-        foregroundColor: Colors.white,
+        backgroundColor: Colors.white,
+        foregroundColor: Colors.black
       ),
       body: Obx(() {
         if (controller.isScanning.value) {

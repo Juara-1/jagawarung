@@ -44,9 +44,12 @@ class HomePage extends GetView<DebtController> {
               children: [
                 Text(
                   'Manajemen Utang',
-                  style: theme.textTheme.headlineMedium?.copyWith(
+                  style: theme.textTheme.headlineSmall?.copyWith(
                     fontWeight: FontWeight.bold,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.visible,
+                  softWrap: false,
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -64,12 +67,6 @@ class HomePage extends GetView<DebtController> {
                 icon: const Icon(Icons.document_scanner_outlined, size: 28),
                 onPressed: () => Get.toNamed('/smart-restock'),
                 tooltip: 'Smart Restock (Scan Nota)',
-                padding: const EdgeInsets.all(12),
-              ),
-              IconButton(
-                icon: const Icon(Icons.refresh, size: 28),
-                tooltip: 'Muat Ulang Data',
-                onPressed: () => controller.loadDebts(),
                 padding: const EdgeInsets.all(12),
               ),
               _buildLogoutMenu(context),
