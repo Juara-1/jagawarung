@@ -1,6 +1,5 @@
-
 import 'package:flutter/material.dart';
-import 'package:jagawarung/app/modules/dashboard/dashboard_controller.dart';
+import '../dashboard_controller.dart';
 
 class SummaryCard extends StatelessWidget {
   final String title;
@@ -17,11 +16,14 @@ class SummaryCard extends StatelessWidget {
     required this.color,
     required this.controller,
     this.isWide = false,
+    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final amountText =
+        controller.formatCurrency(amount).replaceFirst('Rp ', 'Rp\u00A0');
 
     return Container(
       decoration: BoxDecoration(
@@ -89,13 +91,20 @@ class SummaryCard extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Semantics(
-            label: '$title: ${controller.formatCurrency(amount)}',
-            child: Text(
-              controller.formatCurrency(amount),
-              style: theme.textTheme.headlineSmall?.copyWith(
-                color: color,
-                fontWeight: FontWeight.bold,
-                letterSpacing: -0.5,
+            label: '$title: $amountText',
+            child: FittedBox(
+              alignment: Alignment.centerLeft,
+              fit: BoxFit.scaleDown,
+              child: Text(
+                amountText,
+                maxLines: 1,
+                overflow: TextOverflow.visible,
+                softWrap: false,
+                style: theme.textTheme.headlineSmall?.copyWith(
+                  color: color,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: -0.4,
+                ),
               ),
             ),
           ),
@@ -104,3 +113,4 @@ class SummaryCard extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 class VoiceButton extends StatefulWidget {
@@ -14,6 +13,7 @@ class VoiceButton extends StatefulWidget {
     required this.onTapStart,
     required this.onTapEnd,
     required this.colorScheme,
+    super.key,
   });
 
   @override
@@ -22,9 +22,9 @@ class VoiceButton extends StatefulWidget {
 
 class _VoiceButtonState extends State<VoiceButton>
     with SingleTickerProviderStateMixin {
-  late AnimationController _controller;
-  late Animation<double> _scaleAnim;
-  late Animation<double> _ringOpacity;
+  late final AnimationController _controller;
+  late final Animation<double> _scaleAnim;
+  late final Animation<double> _ringOpacity;
 
   @override
   void initState() {
@@ -89,7 +89,6 @@ class _VoiceButtonState extends State<VoiceButton>
             return Stack(
               alignment: Alignment.center,
               children: [
-                // Outer pulsing ring
                 if (widget.isListening)
                   Container(
                     height: 120 * _scaleAnim.value,
@@ -99,7 +98,6 @@ class _VoiceButtonState extends State<VoiceButton>
                       color: Colors.red.withOpacity(_ringOpacity.value * 0.3),
                     ),
                   ),
-                // Inner pulsing ring
                 if (widget.isListening)
                   Container(
                     height: 100,
@@ -109,7 +107,6 @@ class _VoiceButtonState extends State<VoiceButton>
                       color: Colors.red.withOpacity(0.15),
                     ),
                   ),
-                // Main mic button
                 AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   height: 80,
@@ -167,3 +164,4 @@ class _VoiceButtonState extends State<VoiceButton>
     );
   }
 }
+

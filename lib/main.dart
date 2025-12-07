@@ -82,14 +82,11 @@ class _MyAppState extends State<MyApp> {
       final hasToken = await TokenService.hasToken();
 
       if (hasToken) {
-        print('[MyApp] Found saved token, auto-login to dashboard');
         _initialRoute = AppRoutes.main;
       } else {
-        print('[MyApp] No saved token, showing login');
         _initialRoute = AppRoutes.login;
       }
     } catch (e) {
-      print('[MyApp] Error checking auto-login: $e');
       _initialRoute = AppRoutes.login;
     } finally {
       if (mounted) {
