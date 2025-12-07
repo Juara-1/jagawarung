@@ -72,7 +72,6 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
       final result = _parseJsonResponse(jsonText);
       return result;
     } catch (e) {
-      print('AI Parsing Error: $e');
 
       return _fallbackParsing(voiceText);
     }
@@ -98,7 +97,6 @@ Jangan tambahkan penjelasan apapun, HANYA JSON.
         'original_text': '',
       };
     } catch (e) {
-      print('JSON Parse Error: $e');
       return _fallbackParsing(jsonText);
     }
   }

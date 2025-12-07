@@ -25,7 +25,6 @@ class TokenService {
       _storage.write(key: _userEmailKey, value: email),
     ]);
     
-    print('[TokenService] Tokens saved securely');
   }
 
 
@@ -57,7 +56,6 @@ class TokenService {
   
   static Future<void> clearTokens() async {
     await _storage.deleteAll();
-    print('[TokenService] All tokens cleared');
   }
 
 

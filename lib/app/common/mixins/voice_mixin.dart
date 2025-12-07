@@ -2,8 +2,9 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:get/get.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:speech_to_text/speech_to_text.dart' as stt;
+import 'package:shared_preferences/shared_preferences.dart';
 
- mixin VoiceMixin on GetxController {
+mixin VoiceMixin on GetxController {
   late final stt.SpeechToText speech;
   late final FlutterTts flutterTts;
 
@@ -14,10 +15,32 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
   final List<String> _cachedTtsLanguages = [];
   String speechLocaleId = 'id_ID';
 
-  
-  List<String> get preferredTtsLanguages => const ['id-ID', 'jv-ID', 'su-ID', 'en-US'];
+  // Language preference key
+  static const String _ttsLanguageKey = 'preferred_tts_language';
 
-    Future<void> initializeSpeech() async {
+  /// Available languages with labels
+  Map<String, String> get availableLanguages => {
+        'id-ID': 'Bahasa Indonesia',
+        'jv-ID': 'Bahasa Jawa',
+        'su-ID': 'Bahasa Sunda',
+      };
+
+
+  Future<List<String>> get preferredTtsLanguages async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final saved = prefs.getString(_ttsLanguageKey);
+      if (saved != null && availableLanguages.containsKey(saved)) {
+        // Prioritize saved language first
+        return [saved, ...availableLanguages.keys.where((k) => k != saved)];
+      }
+    } catch (e) {
+    }
+    // Default priority: Indonesia > Jawa > Sunda
+    return ['id-ID', 'jv-ID', 'su-ID', 'en-US'];
+  }
+
+  Future<void> initializeSpeech() async {
     try {
       speech = stt.SpeechToText();
       final status = await Permission.microphone.request();
@@ -30,15 +53,19 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
             }
           },
           onError: (error) {
-            print('[Voice] STT Error: ${error.errorMsg}');
             isListening.value = false;
+            Get.snackbar('Error STT', error.errorMsg, snackPosition: SnackPosition.BOTTOM);
           },
         );
       } else {
-        print('[Voice] Microphone permission denied');
+        Get.snackbar(
+          'Izin Ditolak',
+          'Microphone permission diperlukan untuk voice input',
+          snackPosition: SnackPosition.BOTTOM,
+        );
       }
     } catch (e) {
-      print('[Voice] Failed to initialize STT: $e');
+      Get.snackbar('Error', 'Gagal initialize STT: $e', snackPosition: SnackPosition.BOTTOM);
     }
   }
 
@@ -51,49 +78,94 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
       await flutterTts.setVolume(1.0);
       await flutterTts.setPitch(1.0);
     } catch (e) {
-      print('[Voice] Failed to initialize TTS: $e');
+      Get.snackbar('Error', 'Gagal initialize TTS: $e', snackPosition: SnackPosition.BOTTOM);
     }
   }
 
   Future<void> _setPreferredLanguage() async {
     try {
       final langs = await loadAvailableTtsLanguages();
-      for (final code in preferredTtsLanguages) {
+      final preferred = await preferredTtsLanguages;
+      
+      for (final code in preferred) {
         if (langs.contains(code)) {
           await flutterTts.setLanguage(code);
-          print('[Voice] TTS language set to: $code');
           currentTtsLanguage.value = code;
+          // Also set voice (for better language support on some devices)
+          await _setVoiceForLanguage(code);
           return;
         }
       }
-      // Force fallback to Indonesian if available as a best-effort
+      
+      // Force fallback to Indonesian if available
       if (langs.contains('id-ID')) {
         await flutterTts.setLanguage('id-ID');
-        print('[Voice] TTS fallback set to id-ID');
         currentTtsLanguage.value = 'id-ID';
-        return;
+        await _setVoiceForLanguage('id-ID');
       }
-      print('[Voice] No preferred TTS language available, using engine default');
     } catch (e) {
-      print('[Voice] Error setting TTS language: $e');
+      // Silently fail, use engine default
     }
   }
 
-  /// Explicitly set TTS language; returns true if applied
+  /// Set voice for specific language (helps with language support)
+  Future<void> _setVoiceForLanguage(String languageCode) async {
+    try {
+      final voices = await flutterTts.getVoices;
+      if (voices != null && voices is List) {
+        // Find voice matching the language
+        final matchingVoice = voices.firstWhere(
+          (voice) => voice['locale']?.toString().startsWith(languageCode.substring(0, 2)) ?? false,
+          orElse: () => null,
+        );
+        if (matchingVoice != null) {
+          await flutterTts.setVoice({'name': matchingVoice['name'], 'locale': matchingVoice['locale']});
+        }
+      }
+    } catch (e) {
+      // Ignore if voice setting fails
+    }
+  }
+
+  /// Set TTS language and save preference
   Future<bool> setTtsLanguage(String code) async {
     try {
       final langs = await loadAvailableTtsLanguages();
       if (langs.contains(code)) {
         await flutterTts.setLanguage(code);
         currentTtsLanguage.value = code;
-        print('[Voice] TTS language manually set to: $code');
+       
+        await _setVoiceForLanguage(code);
+        
+        
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setString(_ttsLanguageKey, code);
+        
         return true;
       }
-      print('[Voice] Requested TTS language not available: $code');
       return false;
     } catch (e) {
-      print('[Voice] Error setting TTS language manually: $e');
       return false;
+    }
+  }
+
+  /// Check if specific language is available on device
+  Future<bool> isLanguageAvailable(String code) async {
+    try {
+      final langs = await loadAvailableTtsLanguages();
+      return langs.contains(code);
+    } catch (e) {
+      return false;
+    }
+  }
+
+  /// Get saved TTS language preference
+  Future<String?> getSavedTtsLanguage() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      return prefs.getString(_ttsLanguageKey);
+    } catch (e) {
+      return null;
     }
   }
 
@@ -107,7 +179,6 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
         ..addAll(langs);
       return _cachedTtsLanguages;
     } catch (e) {
-      print('[Voice] Failed to load TTS languages: $e');
       return [];
     }
   }
@@ -115,7 +186,6 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
   /// Set speech-to-text locale (default id_ID)
   void setSpeechLocale(String localeId) {
     speechLocaleId = localeId;
-    print('[Voice] STT locale set to: $localeId');
   }
 
   /// Start listening for voice input
@@ -126,7 +196,11 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
     String? localeId,
   }) async {
     if (!isSpeechAvailable.value) {
-      print('[Voice] Speech not available');
+      Get.snackbar(
+        'Speech Tidak Tersedia',
+        'Silakan restart aplikasi atau cek izin microphone',
+        snackPosition: SnackPosition.BOTTOM,
+      );
       return;
     }
 
@@ -155,9 +229,12 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
   /// Speak text (TTS)
   Future<void> speak(String text) async {
     try {
+      if (currentTtsLanguage.value.isNotEmpty) {
+        await flutterTts.setLanguage(currentTtsLanguage.value);
+      }
       await flutterTts.speak(text);
     } catch (e) {
-      print('[Voice] TTS error: $e');
+      // Silently fail
     }
   }
 
@@ -172,4 +249,5 @@ import 'package:speech_to_text/speech_to_text.dart' as stt;
     flutterTts.stop();
   }
 }
+
 

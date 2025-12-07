@@ -8,6 +8,7 @@ class SummaryCard extends StatelessWidget {
   final Color color;
   final DashboardController controller;
   final bool isWide;
+  final bool showChevron;
 
   const SummaryCard({
     required this.title,
@@ -16,6 +17,7 @@ class SummaryCard extends StatelessWidget {
     required this.color,
     required this.controller,
     this.isWide = false,
+    this.showChevron = false,
     super.key,
   });
 
@@ -63,7 +65,7 @@ class SummaryCard extends StatelessWidget {
                 ),
                 child: Icon(icon, color: color, size: 24),
               ),
-              if (isWide)
+              if (isWide && !showChevron)
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
@@ -77,6 +79,12 @@ class SummaryCard extends StatelessWidget {
                       fontWeight: FontWeight.w600,
                     ),
                   ),
+                ),
+              if (showChevron)
+                Icon(
+                  Icons.chevron_right_rounded,
+                  color: color,
+                  size: 32,
                 ),
             ],
           ),

@@ -11,7 +11,6 @@ class AuthRepository {
     required String password,
   }) async {
     try {
-      print('[AuthRepository] signIn called with email: $email');
 
       final response = await _supabase.auth.signInWithPassword(
         email: email,
@@ -19,8 +18,6 @@ class AuthRepository {
       );
 
 
-      print('[AuthRepository] signIn response user: ${response.user?.toJson()}');
-      print('[AuthRepository] signIn session: ${response.session != null}');
 
       if (response.user == null || response.session == null) {
         return AuthResult.failure('Login gagal. Email atau password mungkin salah.');
@@ -34,17 +31,14 @@ class AuthRepository {
         email: response.user!.email ?? '',
       );
 
-      print('[AuthRepository] Tokens saved successfully');
 
       final user = UserModel.fromJson(response.user!.toJson());
       return AuthResult.success(user);
     } on AuthException catch (e) {
 
-      print('[AuthRepository] AuthException: code=${e.statusCode}, message=${e.message}');
       return AuthResult.failure(_getErrorMessage(e));
     } catch (e) {
       // Handle unexpected errors
-      print('[AuthRepository] Unknown error in signIn: $e');
       return AuthResult.failure('Terjadi kesalahan: ${e.toString()}');
     }
   }
@@ -76,7 +70,6 @@ class AuthRepository {
         email: response.user!.email ?? '',
       );
 
-      print('[AuthRepository] SignUp - Tokens saved successfully');
 
       final user = UserModel.fromJson(response.user!.toJson());
       return AuthResult.success(user);
@@ -95,7 +88,6 @@ class AuthRepository {
   
       await TokenService.clearTokens();
       
-      print('[AuthRepository] Logout successful, tokens cleared');
       return AuthResult.success(null);
     } catch (e) {
       return AuthResult.failure('Gagal logout: ${e.toString()}');
@@ -135,7 +127,6 @@ class AuthRepository {
         final refreshToken = await TokenService.getRefreshToken();
         
         if (refreshToken != null) {
-          print('[AuthRepository] Refreshing session...');
           final response = await _supabase.auth.refreshSession(refreshToken);
           
           if (response.session != null && response.user != null) {
@@ -147,7 +138,6 @@ class AuthRepository {
               email: response.user!.email ?? '',
             );
             
-            print('[AuthRepository] Session refreshed successfully');
             final user = UserModel.fromJson(response.user!.toJson());
             return AuthResult.success(user);
           }
@@ -161,13 +151,11 @@ class AuthRepository {
       
       final user = _supabase.auth.currentUser;
       if (user != null) {
-        print('[AuthRepository] Session restored from saved token');
         return AuthResult.success(UserModel.fromJson(user.toJson()));
       }
 
       return AuthResult.failure('Failed to restore session');
     } catch (e) {
-      print('[AuthRepository] Error restoring session: $e');
       await TokenService.clearTokens();
       return AuthResult.failure('Failed to restore session: $e');
     }

@@ -19,18 +19,12 @@ class ExpenseOcrService {
       receiveTimeout: const Duration(seconds: 60),
     ));
 
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: false, 
-      responseBody: true,
-      error: true,
-      logPrint: (obj) => print('[OCR] $obj'),
-    ));
+    // Removed logger for production
   }
 
 
   Future<ExpenseOcrResult> scanReceipt(File imageFile) async {
     try {
-      print('[OCR] Scanning receipt: ${imageFile.path}');
 
       final formData = FormData.fromMap({
         'image': await MultipartFile.fromFile(
@@ -53,7 +47,6 @@ class ExpenseOcrService {
         ),
       );
 
-      print('[OCR] Response status: ${response.statusCode}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return _parseOcrResponse(response.data);
@@ -61,10 +54,8 @@ class ExpenseOcrService {
 
       throw Exception('OCR failed with status: ${response.statusCode}');
     } on DioException catch (e) {
-      print('[OCR] Error: ${e.message}');
       throw Exception(_handleError(e));
     } catch (e) {
-      print('[OCR] Unknown error: $e');
       throw Exception('Gagal memproses gambar: $e');
     }
   }
@@ -121,7 +112,6 @@ class ExpenseOcrService {
         }
       }
 
-      print('[OCR] Extracted - Store: $storeName, Total: $totalAmount, Items: ${items.length}');
 
       return ExpenseOcrResult(
         totalAmount: totalAmount,
@@ -130,7 +120,6 @@ class ExpenseOcrService {
         rawData: extractedData,
       );
     } catch (e) {
-      print('[OCR] Parse error: $e');
       throw Exception('Gagal membaca struk: $e');
     }
   }
