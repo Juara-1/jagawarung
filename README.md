@@ -150,7 +150,7 @@ git clone https://github.com/Juara-1/jagawarung.git
 
 ### Step 2: Setup Environment Variables
 Buat file `.env` di root project:
-    ```bash
+```bash
 # Copy template
 cp .env.example .env
 
@@ -159,10 +159,10 @@ nano .env
 ```
 
 **Isi `.env`:**
-    ```env
+```env
 SUPABASE_URL=https://your-project.supabase.co
-    SUPABASE_ANON_KEY=your-supabase-anon-key
-    KOLOSAL_API_KEY=your-kolosal-api-key
+SUPABASE_ANON_KEY=your-supabase-anon-key
+KOLOSAL_API_KEY=your-kolosal-api-key
 API_BASE_URL=https://jagawarung-backend.onrender.com
 ```
 
@@ -171,9 +171,9 @@ API_BASE_URL=https://jagawarung-backend.onrender.com
 - **Kolosal**: https://kolosal.ai - Dashboard - API Keys
 
 ### Step 3: Install Dependencies
-```bash
-flutter pub get
-```
+    ```bash
+    flutter pub get
+    ```
 
 ### Step 4: Run Application
 
@@ -363,7 +363,7 @@ flutter build apk --release
 
 ## Video Demo
 
-**Link:** [https://drive.google.com/file/d/1UWGaFhqSF7r3a6x_abLP4cpNDvcaFmeJ/view?usp=sharing]
+**Link:** [https://youtu.be/vOHUnvoO8fE]
 
 **Durasi:** 3-5 menit  
 **Isi Video:**
@@ -393,13 +393,6 @@ Contributions are welcome! Silakan:
 - Comment: hanya untuk logic kompleks
 - Prioritas: Dart/Flutter best practices
 
----
-
-## License
-
-Distributed under the MIT License. See `LICENSE` for more information.
-
----
 
 ## Team
 
@@ -426,7 +419,7 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 ## Download APK
 
-**Latest Release:** [GitHub Releases](https://github.com/Juara-1/jagawarung/actions/runs/20005960856/artifacts/4790317848)
+**Latest Release:** [GitHub Releases](https://github.com/Juara-1/jagawarung/releases/latest)
 
 **Direct Download:** `app-release.apk` (~28MB)
 
@@ -443,6 +436,6 @@ Distributed under the MIT License. See `LICENSE` for more information.
 
 **Jangan lupa kasih star kalo project ini membantu!**
 
-Made with Love By Juara 1 Hackathon Imphnen | Voice-First
+Made with Love By Juara 1 Hackathon IMPHNEN | Voice-First
 
 </div>
