@@ -6,6 +6,7 @@ import 'widgets/shimmer_loading.dart';
 import 'widgets/summary_card.dart';
 import 'widgets/transaction_tile.dart';
 import 'widgets/voice_button.dart';
+import 'widgets/language_selector_dialog.dart';
 
 class DashboardView extends GetView<DashboardController> {
   const DashboardView({super.key});
@@ -95,24 +96,48 @@ class DashboardView extends GetView<DashboardController> {
                   ],
                 ),
               ),
-              Container(
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.surface,
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
+              Row(
+                children: [
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-                child: IconButton(
-                  icon: const Icon(Icons.refresh_rounded, size: 24),
-                  onPressed: controller.loadDashboard,
-                  tooltip: 'Muat Ulang Data',
-                  color: theme.colorScheme.primary,
-                ),
+                    child: IconButton(
+                      icon: const Icon(Icons.language_rounded, size: 24),
+                      onPressed: () => Get.dialog(const LanguageSelectorDialog()),
+                      tooltip: 'Pilih Bahasa Voice',
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(12),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.05),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: IconButton(
+                      icon: const Icon(Icons.refresh_rounded, size: 24),
+                      onPressed: controller.loadDashboard,
+                      tooltip: 'Muat Ulang Data',
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
@@ -266,13 +291,39 @@ class DashboardView extends GetView<DashboardController> {
             ],
           ),
           const SizedBox(height: 12),
-          SummaryCard(
-            title: 'Total Utang Pelanggan',
-            amount: summary.totalDebt,
-            icon: Icons.account_balance_wallet_rounded,
-            color: const Color(0xFFF59E0B),
-            controller: controller,
-            isWide: true,
+          GestureDetector(
+            onTap: () => Get.toNamed(AppRoutes.home),
+            child: SummaryCard(
+              title: 'Total Utang Pelanggan',
+              amount: summary.totalDebt,
+              icon: Icons.account_balance_wallet_rounded,
+              color: const Color(0xFFF59E0B),
+              controller: controller,
+              isWide: true,
+              showChevron: true,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 4),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.touch_app_rounded,
+                  size: 14,
+                  color: theme.colorScheme.onSurface.withOpacity(0.5),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  'Tap untuk melihat daftar utang',
+                  style: theme.textTheme.bodySmall?.copyWith(
+                    color: theme.colorScheme.onSurface.withOpacity(0.6),
+                    fontSize: 11,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -298,11 +349,54 @@ class DashboardView extends GetView<DashboardController> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(
-                  'Transaksi Terakhir',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: -0.3,
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Transaksi Terakhir',
+                        style: theme.textTheme.titleLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Pemasukan',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: const Color(0xFF10B981),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFEF4444).withOpacity(0.1),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              'Pengeluaran',
+                              style: theme.textTheme.labelSmall?.copyWith(
+                                color: const Color(0xFFEF4444),
+                                fontWeight: FontWeight.w600,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 TextButton.icon(

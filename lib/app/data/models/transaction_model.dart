@@ -25,7 +25,7 @@ class TransactionModel {
   factory TransactionModel.fromJson(Map<String, dynamic> json) {
     return TransactionModel(
       id: json['id'] as String?,
-      type: TransactionType.fromBackendString(json['note'] as String? ?? ''),
+      type: TransactionType.fromString(json['type'] as String? ?? 'earning'),
       amount: (json['nominal'] as num).toDouble(),
       customerName: json['debtor_name'] as String?,
       description: json['note'] as String?,
@@ -102,16 +102,6 @@ enum TransactionType {
       default:
         return TransactionType.earning;
     }
-  }
-
-  static TransactionType fromBackendString(String note) {
-    final lowerNote = note.toLowerCase();
-    if (lowerNote.contains('utang') || lowerNote.contains('hutang') || lowerNote.contains('pinjam') || lowerNote.contains('bon')) {
-      return TransactionType.debts;
-    } else if (lowerNote.contains('belanja') || lowerNote.contains('beli') || lowerNote.contains('bayar') || lowerNote.contains('keluar')) {
-      return TransactionType.spending;
-    }
-    return TransactionType.earning;
   }
 }
 

@@ -18,9 +18,6 @@ class DashboardController extends GetxController with VoiceMixin {
   final summaryRange = 'day'.obs; // day | week | month 
 
   @override
-  List<String> get preferredTtsLanguages => const ['id-ID', 'jv-ID', 'en-US'];
-
-  @override
   void onInit() {
     super.onInit();
     initializeSpeech();
@@ -38,8 +35,12 @@ class DashboardController extends GetxController with VoiceMixin {
       );
       dashboardSummary.value = summary;
 
+      // Fetch transactions, exclude debts (only earning & spending for dashboard)
       final transactions = await _provider.getTransactions();
-      recentTransactions.value = transactions.take(10).toList();
+      recentTransactions.value = transactions
+          .where((tx) => tx.type != TransactionType.debts)
+          .take(10)
+          .toList();
     } catch (e) {
       errorMessage.value = 'Gagal memuat dashboard: $e';
       Get.snackbar(

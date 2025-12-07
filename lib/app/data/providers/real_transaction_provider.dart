@@ -1,8 +1,11 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:get/get.dart';
 import 'package:jagawarung/env.dart';
 import '../models/transaction_model.dart';
 import '../models/dashboard_model.dart';
 import '../services/token_service.dart';
+import '../../routes/app_routes.dart';
 
 class RealTransactionProvider {
   final Dio _dio;
@@ -29,24 +32,33 @@ class RealTransactionProvider {
           final token = await TokenService.getAccessToken();
           if (token != null) {
             options.headers['Authorization'] = 'Bearer $token';
-            print('[API] Request with Bearer token');
           }
           return handler.next(options);
         },
         onError: (error, handler) async {
           if (error.response?.statusCode == 401) {
-            print('[API] Token expired, need re-login');
+            // Token expired or invalid - redirect to login
+            Get.snackbar(
+              'Sesi Berakhir',
+              'Silakan login kembali',
+              snackPosition: SnackPosition.BOTTOM,
+              backgroundColor: Colors.orange.shade100,
+              duration: const Duration(seconds: 2),
+            );
+            
+            // Clear tokens
+            await TokenService.clearTokens();
+            
+            // Redirect to login (delay to show snackbar)
+            Future.delayed(const Duration(milliseconds: 500), () {
+              Get.offAllNamed(AppRoutes.login);
+            });
           }
           return handler.next(error);
         },
       ));
 
-      _dio.interceptors.add(LogInterceptor(
-        requestBody: true,
-        responseBody: true,
-        error: true,
-        logPrint: (obj) => print('[Dio] $obj'),
-      ));
+      // Removed logger for production
     }
   }
 
@@ -134,7 +146,6 @@ class RealTransactionProvider {
     bool upsert = false,
   }) async {
     try {
-      print('[Transaction] Creating: ${transaction.toJson()}');
 
       final queryParams = <String, dynamic>{};
       if (upsert) {
@@ -147,7 +158,6 @@ class RealTransactionProvider {
         queryParameters: queryParams,
       );
 
-      print('[Transaction] Response: ${response.data}');
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         if (response.data['success'] == true) {
@@ -192,7 +202,6 @@ class RealTransactionProvider {
         queryParams['created_to'] = createdTo.toIso8601String();
       }
 
-      print('[Transaction] Fetching with params: $queryParams');
 
       final response = await _dio.get(
         '/transactions',
@@ -206,7 +215,6 @@ class RealTransactionProvider {
 
       return [];
     } on DioException catch (e) {
-      print('[Transaction] Error: ${e.message}');
       throw Exception(_handleError(e));
     }
   }
@@ -233,7 +241,6 @@ class RealTransactionProvider {
         transactionCount: recentTransactions.length,
       );
     } catch (e) {
-      print('[Dashboard] Error: $e');
       return DashboardSummary.empty();
     }
   }
@@ -268,11 +275,9 @@ class RealTransactionProvider {
   
   Future<TransactionModel> repayDebt(String transactionId) async {
     try {
-      print('[Transaction] Repaying debt: $transactionId');
 
       final response = await _dio.post('/transactions/$transactionId/repay');
 
-      print('[Transaction] Repay response: ${response.data}');
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         return TransactionModel.fromJson(response.data['data']);
@@ -289,7 +294,6 @@ class RealTransactionProvider {
     String timeRange = 'day',
   }) async {
     try {
-      print('[Transaction] Fetching summary for: $timeRange');
 
       final response = await _dio.get(
         '/transactions/summary',
@@ -299,7 +303,6 @@ class RealTransactionProvider {
 
       if (response.statusCode == 200 && response.data['success'] == true) {
         final data = response.data['data'];
-        print("data summary ${data}");
         return {
           'total_debts': (data['total_debts'] as num?)?.toDouble() ?? 0,
           'total_spending': (data['total_spending'] as num?)?.toDouble() ?? 0,
@@ -313,7 +316,6 @@ class RealTransactionProvider {
         'total_earning': 0,
       };
     } on DioException catch (e) {
-      print('[Transaction] Error fetching summary: ${e.message}');
       throw Exception(_handleError(e));
     }
   }
