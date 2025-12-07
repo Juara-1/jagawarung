@@ -138,13 +138,15 @@ class HomePage extends GetView<DebtController> {
         label: 'Tombol Perintah Suara. Status saat ini: $label',
         button: true,
         child: FloatingActionButton.extended(
-          onPressed: isProcessing ? null : () {
-            if (isListening) {
-              controller.stopListening();
-            } else {
-              controller.startListening();
-            }
-          },
+          onPressed: isProcessing
+              ? null
+              : () {
+                  if (isListening) {
+                    controller.stopVoiceInput();
+                  } else {
+                    controller.startVoiceInput();
+                  }
+                },
           backgroundColor: buttonColor,
           icon: isProcessing
               ? SizedBox(

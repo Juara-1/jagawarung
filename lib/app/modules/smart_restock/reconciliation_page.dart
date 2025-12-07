@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 import 'smart_restock_controller.dart';
+import '../../common/utils/format_utils.dart';
+import '../../common/utils/currency_input_formatter.dart';
 
 /// Confirmation page for expense OCR result
 class ReconciliationPage extends StatelessWidget {
@@ -111,19 +113,19 @@ class ReconciliationPage extends StatelessWidget {
             TextField(
               controller: controller.amountController,
               keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                prefixIcon: const Icon(Icons.receipt_long, color: Colors.deepPurple),
+              inputFormatters: [CurrencyInputFormatter()],
+              decoration: const InputDecoration(
+                prefixIcon: Icon(Icons.receipt_long, color: Colors.deepPurple),
                 labelText: 'Total pengeluaran',
-                border: const OutlineInputBorder(),
+                border: OutlineInputBorder(),
                 filled: true,
                 fillColor: Colors.white,
                 prefixText: 'Rp ',
+                hintText: '0',
               ),
               onChanged: (value) {
-                final parsed = double.tryParse(value.replaceAll('.', '').replaceAll(',', '.'));
-                if (parsed != null) {
-                  controller.totalAmount.value = parsed;
-                }
+                final parsed = FormatUtils.parseCurrency(value);
+                controller.totalAmount.value = parsed;
               },
             ),
           ],

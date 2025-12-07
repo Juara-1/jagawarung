@@ -5,6 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import '../../data/services/expense_ocr_service.dart';
 import '../../data/providers/real_transaction_provider.dart';
 import '../../data/models/transaction_model.dart';
+import '../../common/utils/format_utils.dart';
 
 class SmartRestockController extends GetxController {
   final ExpenseOcrService _ocrService = ExpenseOcrService();
@@ -75,7 +76,8 @@ class SmartRestockController extends GetxController {
       storeName.value = result.storeName;
       items.value = result.items;
       noteController.text = result.summary;
-      amountController.text = result.totalAmount.toStringAsFixed(0);
+     
+      amountController.text = FormatUtils.formatNumber(result.totalAmount);
 
       isScanning.value = false;
 
@@ -85,7 +87,6 @@ class SmartRestockController extends GetxController {
       isScanning.value = false;
       errorMessage.value = 'Gagal memproses struk: $e';
       Get.snackbar('❌ Error', errorMessage.value, backgroundColor: Colors.red.shade100);
-      print('❌ OCR error: $e');
     }
   }
 
