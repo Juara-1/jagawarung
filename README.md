@@ -1,4 +1,4 @@
-# 🏪 Jaga Warung – Voice-First POS & OCR
+# Jaga Warung – Voice-First POS & OCR
 
 <div align="center">
 
@@ -9,61 +9,61 @@
 
 **Solusi Manajemen Warung Pintar dengan Voice Assistant & AI-Powered OCR**
 
-[🎥 Video Demo](#-video-demo) • [✨ Features](#-fitur-utama) • [🚀 Quick Start](#-instalasi) • [📚 Dokumentasi](#-dokumentasi)
+[Video Demo](#video-demo) • [Features](#fitur-utama) • [Quick Start](#instalasi) • [Dokumentasi](#dokumentasi)
 
 </div>
 
 ---
 
-## 📖 Tentang Project
+## Tentang Project
 
 **Jaga Warung** adalah aplikasi mobile untuk membantu pemilik warung/UMKM mengelola keuangan, stok, dan utang pelanggan **tanpa perlu mengetik manual**. Cukup bicara atau scan nota belanja, semua transaksi tercatat otomatis!
 
-### 🎯 Problem Statement
-- Pemilik warung sibuk melayani pembeli → **tidak sempat mencatat transaksi**
+### Problem Statement
+- Pemilik warung sibuk melayani pembeli - tidak sempat mencatat transaksi
 - Menulis manual lambat dan rawan error
 - Nota belanja menumpuk, sulit diinput ke sistem
 
-### 💡 Solution
+### Solution
 - **Voice Assistant** untuk catat transaksi dengan bicara (seperti Siri/Google Assistant)
 - **OCR Nota Belanja** untuk scan dan input otomatis
 - **Multi-language TTS** (Indonesia, Jawa, Sunda) untuk aksesibilitas
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-### 🎤 Voice Agent (AI-Powered)
+### Voice Agent (AI-Powered)
 - Catat transaksi (pemasukan/pengeluaran/utang) dengan **suara**
 - Natural Language Processing via **Google Gemini AI**
-- Multi-language TTS: **Bahasa Sunda → Jawa → Indonesia** (fallback otomatis)
+- Multi-language TTS: **Bahasa Sunda - Jawa - Indonesia** (fallback otomatis)
 
 
-### 📊 Dashboard Real-time
+### Dashboard Real-time
 - Ringkasan harian/mingguan/bulanan (spending, earning, debt)
 - Chart transaksi terbaru
 - Filtering by period (day/week/month)
 - Pull-to-refresh & shimmer loading
 
-### 💳 Manajemen Utang
+### Manajemen Utang
 - Daftar utang per pelanggan
 - Voice command untuk catat/bayar utang
 - Auto-merge utang dengan nama pelanggan yang sama
-- Tandai lunas → otomatis jadi pemasukan
+- Tandai lunas - otomatis jadi pemasukan
 
-### 📸 OCR Pengeluaran (Smart Scan)
+### OCR Pengeluaran (Smart Scan)
 - Scan nota belanja via **Kolosal AI OCR**
 - Auto-extract: nominal, nama toko, items
 - Edit manual sebelum simpan
 - Langsung masuk sebagai `spending` transaction
 
-### 📋 Daftar Transaksi
+### Daftar Transaksi
 - List semua transaksi dengan pagination (infinite scroll)
 - Filter by type: earning/spending/debts
 - Pull-to-refresh
 - Currency formatting dengan thousand separator
 
-### 🔐 Authentication
+### Authentication
 - Login/Register via **Supabase**
 - Token management dengan **Flutter Secure Storage**
 - Auto-login dengan saved token
@@ -71,7 +71,7 @@
 
 ---
 
-## 📸 Screenshots
+## Screenshots
 
 <div align="center">
 <table>
@@ -102,7 +102,7 @@
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 ### Frontend (Mobile)
 | Technology | Purpose |
@@ -123,7 +123,6 @@
 |:--------|:--------|
 | ** API (Express.js)** | Backend untuk transaksi, deployed di **Render** |
 | **Supabase** | Authentication (Login/Register) |
-| **Google Gemini AI** | Natural Language Processing untuk voice commands |
 | **Kolosal AI OCR** | Optical Character Recognition untuk scan nota |
 
 ### Architecture
@@ -134,24 +133,24 @@
 
 ---
 
-## 🚀 Instalasi
+## Instalasi
 
 ### Prerequisites
 Pastikan sudah terinstall:
-- ✅ **Flutter SDK** >= 3.24.0 ([Install Guide](https://docs.flutter.dev/get-started/install))
-- ✅ **Dart SDK** >= 3.5.1
-- ✅ **Android Studio** (untuk Android) atau **Xcode** (untuk iOS)
-- ✅ **Git**
+- **Flutter SDK** >= 3.24.0 ([Install Guide](https://docs.flutter.dev/get-started/install))
+- **Dart SDK** >= 3.5.1
+- **Android Studio** (untuk Android) atau **Xcode** (untuk iOS)
+- **Git**
 
 ### Step 1: Clone Repository
-```bash
+    ```bash
 git clone https://github.com/Juara-1/jagawarung.git
-cd jagawarung
-```
+    cd jagawarung
+    ```
 
 ### Step 2: Setup Environment Variables
 Buat file `.env` di root project:
-```bash
+    ```bash
 # Copy template
 cp .env.example .env
 
@@ -160,18 +159,16 @@ nano .env
 ```
 
 **Isi `.env`:**
-```env
+    ```env
 SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_ANON_KEY=your-supabase-anon-key
-GEMINI_API_KEY=your-gemini-api-key
-KOLOSAL_API_KEY=your-kolosal-api-key
+    SUPABASE_ANON_KEY=your-supabase-anon-key
+    KOLOSAL_API_KEY=your-kolosal-api-key
 API_BASE_URL=https://jagawarung-backend.onrender.com
 ```
 
-> **Cara Dapatkan API Keys:**
-> - **Supabase**: https://supabase.com → Create Project → Settings → API
-> - **Gemini**: https://aistudio.google.com/app/apikey
-> - **Kolosal**: https://kolosal.ai → Dashboard → API Keys
+**Cara Dapatkan API Keys:**
+- **Supabase**: https://supabase.com - Create Project - Settings - API
+- **Kolosal**: https://kolosal.ai - Dashboard - API Keys
 
 ### Step 3: Install Dependencies
 ```bash
@@ -181,9 +178,9 @@ flutter pub get
 ### Step 4: Run Application
 
 #### Mode Debug (untuk development):
-```bash
-flutter run
-```
+    ```bash
+    flutter run
+    ```
 
 #### Build Release APK (untuk production):
 ```bash
@@ -204,7 +201,21 @@ adb install build/app/outputs/flutter-apk/app-release.apk
 
 ---
 
-## 📚 Dokumentasi
+## Test Credentials
+
+Untuk testing aplikasi, gunakan akun berikut:
+
+```
+Email: jagawarung@gmail.com
+Password: 12345678
+```
+
+**Catatan:**
+- Jangan ubah password akun testing
+
+---
+
+## Dokumentasi
 
 ### Struktur Project
 ```
@@ -274,15 +285,15 @@ lib/
 
 ### Voice Commands Examples
 ```
-✅ "Catat pemasukan dua ratus ribu dari penjualan"
-✅ "Budi utang seratus ribu"
-✅ "Belanja sayur lima puluh ribu"
-✅ "Bayar utang Siti lima puluh ribu"
+"Catat pemasukan dua ratus ribu dari penjualan"
+"Budi utang seratus ribu"
+"Belanja sayur lima puluh ribu"
+"Bayar utang Siti lima puluh ribu"
 ```
 
 ---
 
-## 🔊 Voice & Aksesibilitas
+## Voice & Aksesibilitas
 
 ### Text-to-Speech (TTS) Fallback
 Aplikasi mencoba bahasa secara berurutan:
@@ -298,19 +309,19 @@ Aplikasi mencoba bahasa secara berurutan:
 
 ---
 
-## 🧰 Troubleshooting
+## Troubleshooting
 
 ### Issue: Mikrofon tidak berfungsi
 **Solusi:**
-1. Cek permission di Android Settings → Apps → Jaga Warung → Permissions → Microphone ✅
+1. Cek permission di Android Settings - Apps - Jaga Warung - Permissions - Microphone
 2. Restart aplikasi
 3. Pastikan device tidak dalam mode silent/DND
 
 ### Issue: 401 Unauthorized
 **Solusi:**
 1. Pastikan sudah login
-2. Token mungkin expired → logout dan login ulang
-3. Cek `.env` → `API_BASE_URL` benar
+2. Token mungkin expired - logout dan login ulang
+3. Cek `.env` - `API_BASE_URL` benar
 
 ### Issue: 400 Bad Request (debtor_name check)
 **Solusi:**
@@ -350,9 +361,9 @@ flutter build apk --release
 
 ---
 
-## 🎥 Video Demo
+## Video Demo
 
-> **🎬 Tonton Demo Lengkap:** [https://drive.google.com/file/d/1UWGaFhqSF7r3a6x_abLP4cpNDvcaFmeJ/view?usp=sharing]
+**Link:** [https://drive.google.com/file/d/1UWGaFhqSF7r3a6x_abLP4cpNDvcaFmeJ/view?usp=sharing]
 
 **Durasi:** 3-5 menit  
 **Isi Video:**
@@ -367,7 +378,7 @@ flutter build apk --release
 
 ---
 
-## 🤝 Kontribusi
+## Kontribusi
 
 Contributions are welcome! Silakan:
 1. Fork repo ini
@@ -384,39 +395,54 @@ Contributions are welcome! Silakan:
 
 ---
 
-## 📄 License
+## License
 
 Distributed under the MIT License. See `LICENSE` for more information.
 
 ---
 
-## 👥 Team
+## Team
 
-**Built with ❤️ by Juara 1 Hackathon IMPHNEN**
+**Built by Juara 1 Hackathon IMPHNEN**
 
 - **Developer:** Arvan Yudhistia Ardana & Daffa Alexander
-- **Contact:** [arvanardana1@gmail.com]
-- **Repository:** [https://github.com/Juara-1/jagawarung](JAGA WARUNG)
+- **Contact:** arvanardana1@gmail.com
+- **Repository:** https://github.com/Juara-1/jagawarung
 
 ---
 
-## 🔮 Future Roadmap
+## Future Roadmap
 
-- [ ] CI/CD pipeline dengan GitHub Actions
-- [ ] Deploy to Google Play Store
-- [ ] iOS version
-- [ ] Offline mode dengan local database (SQLite/Hive)
-- [ ] Multi-store support (untuk owner dengan banyak cabang)
-- [ ] Laporan keuangan PDF export
-- [ ] WhatsApp integration untuk reminder utang
-- [ ] Barcode scanner untuk stok barang
+- CI/CD pipeline dengan GitHub Actions
+- Deploy to Google Play Store
+- iOS version
+- Offline mode dengan local database (SQLite/Hive)
+- Multi-store support (untuk owner dengan banyak cabang)
+- Laporan keuangan PDF export
+- WhatsApp integration untuk reminder utang
+- Barcode scanner untuk stok barang
+
+---
+
+## Download APK
+
+**Latest Release:** [GitHub Releases](https://github.com/Juara-1/jagawarung/actions/runs/20005960856/artifacts/4790317848)
+
+**Direct Download:** `app-release.apk` (~28MB)
+
+**Installation:**
+1. Download APK dari link di atas
+2. Enable "Install from unknown sources" di Android Settings
+3. Install APK
+4. Grant microphone & camera permissions
+5. Login dengan test credentials atau register akun baru
 
 ---
 
 <div align="center">
 
-**⭐ Jangan lupa kasih star kalo project ini membantu! ⭐**
+**Jangan lupa kasih star kalo project ini membantu!**
 
-Made with Flutter 💙 | Voice-First 🎤
+Made with Love By Juara 1 Hackathon Imphnen | Voice-First
 
 </div>
