@@ -11,7 +11,6 @@ class Environment {
 
   static String get supabaseUrl => _get('SUPABASE_URL');
   static String get supabaseAnonKey => _get('SUPABASE_ANON_KEY');
-  static String get geminiApiKey => _get('GEMINI_API_KEY');
   static String get kolosalApiKey => _get('KOLOSAL_API_KEY');
   static String get apiBaseUrl => _get('API_BASE_URL');
 
@@ -21,9 +20,6 @@ class Environment {
     }
     if (supabaseAnonKey.isEmpty) {
       throw Exception('SUPABASE_ANON_KEY is not set in .env file');
-    }
-    if (geminiApiKey.isEmpty) {
-      throw Exception('GEMINI_API_KEY is not set in .env file');
     }
     if (kolosalApiKey.isEmpty) {
       throw Exception('KOLOSAL_API_KEY is not set in .env file');

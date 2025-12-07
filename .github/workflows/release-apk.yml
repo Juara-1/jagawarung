@@ -44,6 +44,15 @@ jobs:
           storeFile=upload-keystore.jks
           EOF
 
+      - name: Create .env file
+        run: |
+          cat > .env <<EOF
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}
+          KOLOSAL_API_KEY=${{ secrets.KOLOSAL_API_KEY }}
+          API_BASE_URL=${{ secrets.API_BASE_URL }}
+          EOF
+
       - name: Install Flutter dependencies
         run: flutter pub get
 

@@ -69,7 +69,7 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Initialize Text-to-Speech with language fallback
+  
   Future<void> initializeTts() async {
     try {
       flutterTts = FlutterTts();
@@ -91,29 +91,26 @@ mixin VoiceMixin on GetxController {
         if (langs.contains(code)) {
           await flutterTts.setLanguage(code);
           currentTtsLanguage.value = code;
-          // Also set voice (for better language support on some devices)
+        
           await _setVoiceForLanguage(code);
           return;
         }
       }
       
-      // Force fallback to Indonesian if available
+      //force fallback ke indo
       if (langs.contains('id-ID')) {
         await flutterTts.setLanguage('id-ID');
         currentTtsLanguage.value = 'id-ID';
         await _setVoiceForLanguage('id-ID');
       }
     } catch (e) {
-      // Silently fail, use engine default
     }
   }
 
-  /// Set voice for specific language (helps with language support)
   Future<void> _setVoiceForLanguage(String languageCode) async {
     try {
       final voices = await flutterTts.getVoices;
       if (voices != null && voices is List) {
-        // Find voice matching the language
         final matchingVoice = voices.firstWhere(
           (voice) => voice['locale']?.toString().startsWith(languageCode.substring(0, 2)) ?? false,
           orElse: () => null,
@@ -127,7 +124,7 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Set TTS language and save preference
+ 
   Future<bool> setTtsLanguage(String code) async {
     try {
       final langs = await loadAvailableTtsLanguages();
@@ -149,7 +146,7 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Check if specific language is available on device
+ 
   Future<bool> isLanguageAvailable(String code) async {
     try {
       final langs = await loadAvailableTtsLanguages();
@@ -159,7 +156,7 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Get saved TTS language preference
+ 
   Future<String?> getSavedTtsLanguage() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -169,7 +166,7 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Get available TTS languages (cached)
+  
   Future<List<String>> loadAvailableTtsLanguages() async {
     if (_cachedTtsLanguages.isNotEmpty) return _cachedTtsLanguages;
     try {
@@ -183,12 +180,12 @@ mixin VoiceMixin on GetxController {
     }
   }
 
-  /// Set speech-to-text locale (default id_ID)
+
   void setSpeechLocale(String localeId) {
     speechLocaleId = localeId;
   }
 
-  /// Start listening for voice input
+  
   Future<void> startListening({
     required Function(String) onResult,
     Duration listenFor = const Duration(seconds: 10),
@@ -220,13 +217,13 @@ mixin VoiceMixin on GetxController {
     );
   }
 
-  /// Stop listening
+
   Future<void> stopListening() async {
     await speech.stop();
     isListening.value = false;
   }
 
-  /// Speak text (TTS)
+  
   Future<void> speak(String text) async {
     try {
       if (currentTtsLanguage.value.isNotEmpty) {
@@ -234,16 +231,16 @@ mixin VoiceMixin on GetxController {
       }
       await flutterTts.speak(text);
     } catch (e) {
-      // Silently fail
+      
     }
   }
 
-  /// Stop speaking
+ 
   Future<void> stopSpeaking() async {
     await flutterTts.stop();
   }
 
-  /// Cleanup voice resources
+
   void disposeVoice() {
     speech.stop();
     flutterTts.stop();
