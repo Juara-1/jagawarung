@@ -38,6 +38,12 @@ android/.gradle/
 /android/app/profile/
 /android/app/release/
 
+# Keystore files (sensitive)
+*.jks
+*.keystore
+android/key.properties
+keystore.b64.txt
+
 # iOS/macOS
 ios/Pods/
 ios/Runner.xcworkspace/

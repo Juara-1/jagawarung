@@ -352,7 +352,7 @@ flutter build apk --release
 
 ## 🎥 Video Demo
 
-> **🎬 Tonton Demo Lengkap:** [Link YouTube/Google Drive]
+> **🎬 Tonton Demo Lengkap:** [https://drive.google.com/file/d/1UWGaFhqSF7r3a6x_abLP4cpNDvcaFmeJ/view?usp=sharing]
 
 **Durasi:** 3-5 menit  
 **Isi Video:**
